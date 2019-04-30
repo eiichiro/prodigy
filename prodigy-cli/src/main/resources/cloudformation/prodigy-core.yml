@@ -1,0 +1,19 @@
+# Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+# All Rights Reserved.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS CloudFormation template for Prodigy to create Amazon S3 bucket to hold core assets
+Resources:
+  CoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "prodigy-core-${AWS::Region}-${AWS::AccountId}"
+Outputs:
+  CoreBucket:
+    Description: S3 bucket name for Prodigy to hold core assets
+    Value: !Ref CoreBucket
+    Export:
+      Name: "prodigy-core"

@@ -1,0 +1,26 @@
+# Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+# All Rights Reserved.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS CloudFormation template for Prodigy to create AWS Identity and Access Management (IAM) policy to grant controllers access to user resources
+Parameters:
+  Profile:
+    Description: Prodigy deployment profile to grant controllers access to user resources
+    Type: String
+    AllowedPattern: "[A-Za-z0-9]+"
+Resources:
+  ControllerPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            NotAction: "iam:*"
+            Resource: "*"
+      ManagedPolicyName: !Sub "prodigy-${Profile}-controller-${AWS::Region}"
+Outputs:
+  ControllerPolicy:
+    Description: IAM policy ARN to grant controllers access to user resources
+    Value: !Ref ControllerPolicy
+    Export:
+      Name: !Sub "prodigy-${Profile}-controller"
