@@ -15,17 +15,16 @@
  */
 package io.eiichiro.prodigy;
 
-public abstract class Fault {
+public final class Prodigy {
 
-    private String id;
+    private static Configuration configuration = new Configuration();
 
-    public String id() {
-        return id;
+    public static Configuration configuration() {
+        return configuration;
     }
 
-    public Fault id(String id) {
-        this.id = id;
-        return this;
+    public static synchronized void configuration(Configuration configuration) {
+        Prodigy.configuration = configuration;
     }
-
+    
 }

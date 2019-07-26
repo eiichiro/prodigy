@@ -15,17 +15,8 @@
  */
 package io.eiichiro.prodigy;
 
-public abstract class Fault {
+public class ViolationException extends RuntimeException {
 
-    private String id;
-
-    public String id() {
-        return id;
-    }
-
-    public Fault id(String id) {
-        this.id = id;
-        return this;
-    }
-
+    private static final long serialVersionUID = 1L;
+    
 }

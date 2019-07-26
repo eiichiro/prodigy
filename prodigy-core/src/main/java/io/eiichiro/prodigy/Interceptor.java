@@ -15,17 +15,6 @@
  */
 package io.eiichiro.prodigy;
 
-public abstract class Fault {
-
-    private String id;
-
-    public String id() {
-        return id;
-    }
-
-    public Fault id(String id) {
-        this.id = id;
-        return this;
-    }
+public interface Interceptor {
 
 }

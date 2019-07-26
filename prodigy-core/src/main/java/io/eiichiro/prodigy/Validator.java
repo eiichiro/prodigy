@@ -15,17 +15,8 @@
  */
 package io.eiichiro.prodigy;
 
-public abstract class Fault {
+public interface Validator {
 
-    private String id;
-
-    public String id() {
-        return id;
-    }
-
-    public Fault id(String id) {
-        this.id = id;
-        return this;
-    }
-
+    public void validate() throws ViolationException;
+    
 }

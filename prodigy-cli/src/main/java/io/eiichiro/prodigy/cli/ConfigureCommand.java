@@ -15,6 +15,7 @@
  */
 package io.eiichiro.prodigy.cli;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -24,7 +25,7 @@ import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
 
-public class InjectCommand implements Command {
+public class ConfigureCommand implements Command {
 
     private final Log log = LogFactory.getLog(getClass());
 
@@ -32,24 +33,29 @@ public class InjectCommand implements Command {
 
     private final Map<String, Object> configuration;
 
-    public InjectCommand(Shell shell, Map<String, Object> configuration) {
+    private final Path path;
+
+    public ConfigureCommand(Shell shell, Map<String, Object> configuration, Path path) {
         this.shell = shell;
         this.configuration = configuration;
+        this.path = path;
     }
 
     @Override
     public String name() {
-        return "inject";
+        return "configure";
     }
 
     @Override
     public Usage usage() {
-        return new Usage("inject [options] <fault> [json-params]");
+        Usage usage = new Usage("configure [options] <profile> [json-params]");
+        usage.option(null, "default", false, "set <profile> as default");
+        return usage;
     }
 
     @Override
     public void run(Line line) throws Exception {
-
-    }
+		
+	}
 
 }

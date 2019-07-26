@@ -13,19 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.eiichiro.prodigy;
+package io.eiichiro.prodigy.cli;
 
-public abstract class Fault {
+import org.eiichiro.ash.Command;
+import org.eiichiro.ash.Line;
+import org.eiichiro.ash.Usage;
 
-    private String id;
+public class DeployCommand implements Command {
 
-    public String id() {
-        return id;
+    @Override
+    public String name() {
+        return null;
     }
 
-    public Fault id(String id) {
-        this.id = id;
-        return this;
+    @Override
+    public Usage usage() {
+        return null;
     }
+
+    @Override
+    public void run(Line line) throws Exception {
+		
+	}
 
 }
