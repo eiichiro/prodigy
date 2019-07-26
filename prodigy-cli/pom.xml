@@ -29,9 +29,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.eiichiro.prodigy</groupId>
+      <artifactId>prodigy-core</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>org.eiichiro.ash</groupId>
       <artifactId>ash-java</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -50,6 +55,12 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-jcl</artifactId>
       <version>2.10.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.24</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -75,6 +86,22 @@
             <phase>package</phase>
             <goals>
               <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.oracle.substratevm</groupId>
+        <artifactId>native-image-maven-plugin</artifactId>
+        <configuration>
+          <imageName>prodigy</imageName>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-native-image</id>
+            <phase>package</phase>
+            <goals>
+              <goal>native-image</goal>
             </goals>
           </execution>
         </executions>
