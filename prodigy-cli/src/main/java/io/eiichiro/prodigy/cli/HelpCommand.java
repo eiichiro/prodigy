@@ -37,7 +37,7 @@ public class HelpCommand implements Command {
 
     @Override
     public Usage usage() {
-        return new Usage("help");
+        return new Usage("help <command>");
     }
 
     @Override
