@@ -15,25 +15,65 @@
  */
 package io.eiichiro.prodigy.cli;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eiichiro.ash.Command;
 import org.eiichiro.ash.Line;
+import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
+import org.yaml.snakeyaml.Yaml;
 
 public class DeployCommand implements Command {
 
+    private final Log log = LogFactory.getLog(getClass());
+
+    private final Shell shell;
+
+    private final Map<String, Object> configuration;
+
+    private final Path path;
+
+    public DeployCommand(Shell shell, Map<String, Object> configuration, Path path) {
+        this.shell = shell;
+        this.configuration = configuration;
+        this.path = path;
+    }
+
     @Override
     public String name() {
-        return null;
+        return "deploy";
     }
 
     @Override
     public Usage usage() {
-        return null;
+        return new Usage("deploy [options] <profile>");
     }
 
     @Override
     public void run(Line line) throws Exception {
-		
+		if (line.args().size() == 1) {
+            String profile = line.args().get(0);
+
+            if (profile != null && !profile.isEmpty()) {
+                Map<String, String> config = new LinkedHashMap<>();
+                configuration.put("default", profile);
+                configuration.put(profile, config);
+                Yaml yaml = new Yaml();
+                yaml.dump(configuration, Files.newBufferedWriter(path));
+                shell.console().println("Default profile has been updated with [" + profile + "]");
+                log.debug("Configuration file [" + path + "] updated");
+                Files.readAllLines(path).stream().forEach(log::debug);
+                return;
+            }
+        }
+
+        shell.console().println("Unsupported usage");
+        shell.console().println(usage().toString());
 	}
 
 }

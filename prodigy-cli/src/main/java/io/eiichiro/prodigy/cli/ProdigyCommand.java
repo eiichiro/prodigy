@@ -91,15 +91,22 @@ public class ProdigyCommand implements Command {
             Yaml yaml = new Yaml();
             configuration = yaml.load(Files.newBufferedReader(path));
             log.info("Configuration file [" + path + "] loaded");
+        } else {
+            log.debug("Configuration file [" + path + "] not found");
+        }
+
+        if (Files.exists(path)) {
             shell.register(new InjectCommand(shell, configuration));
             shell.register(new ConfigureCommand(shell, configuration, path));
             log.debug("Command [" + InjectCommand.class.getName() + "] registered");
             log.debug("Command [" + ConfigureCommand.class.getName() + "] registered");
         } else {
-            log.debug("Configuration file [" + path + "] not found");
             log.debug("Command [" + InjectCommand.class.getName() + "] disabled");
             log.debug("Command [" + ConfigureCommand.class.getName() + "] disabled");
         }
+
+        shell.register(new DeployCommand(shell, configuration, path));
+        log.debug("Command [" + DeployCommand.class.getName() + "] registered");
 
         List<String> args = line.args();
 

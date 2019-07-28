@@ -15,6 +15,7 @@
  */
 package io.eiichiro.prodigy.cli;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import org.eiichiro.ash.Command;
 import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
+import org.yaml.snakeyaml.Yaml;
 
 public class ConfigureCommand implements Command {
 
@@ -55,7 +57,27 @@ public class ConfigureCommand implements Command {
 
     @Override
     public void run(Line line) throws Exception {
-		
+		if (line.options().containsKey("default")) {
+            if (line.args().size() == 1) {
+                String profile = line.args().get(0);
+
+                if (!configuration.containsKey(profile)) {
+                    shell.console().println("Profile [" + profile + "] does not exist");
+                    return;
+                }
+
+                configuration.put("default", profile);
+                Yaml yaml = new Yaml();
+                yaml.dump(configuration, Files.newBufferedWriter(path));
+                shell.console().println("Default profile has been updated with [" + profile + "]");
+                log.debug("Configuration file [" + path + "] updated");
+                Files.readAllLines(path).stream().forEach(log::debug);
+                return;
+            }
+        }
+
+        shell.console().println("Unsupported usage");
+        shell.console().println(usage().toString());
 	}
 
 }
