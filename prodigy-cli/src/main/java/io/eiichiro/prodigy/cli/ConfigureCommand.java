@@ -62,13 +62,14 @@ public class ConfigureCommand implements Command {
                 String profile = line.args().get(0);
 
                 if (!configuration.containsKey(profile)) {
-                    shell.console().println("Profile [" + profile + "] does not exist");
+                    shell.console().println("Profile [" + profile + "] does not exist. Run deploy <profile> command first");
                     return;
                 }
 
                 configuration.put("default", profile);
                 Yaml yaml = new Yaml();
                 yaml.dump(configuration, Files.newBufferedWriter(path));
+                shell.console().prompt("prodigy - " + profile + "> ");
                 shell.console().println("Default profile has been updated with [" + profile + "]");
                 log.debug("Configuration file [" + path + "] updated");
                 Files.readAllLines(path).stream().forEach(log::debug);

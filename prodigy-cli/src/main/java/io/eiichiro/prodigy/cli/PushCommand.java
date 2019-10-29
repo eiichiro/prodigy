@@ -1,28 +1,13 @@
-/*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.eiichiro.prodigy.cli;
 
-import java.util.LinkedHashMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,7 +16,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -40,7 +25,7 @@ import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
 
-public class InjectCommand implements Command {
+public class PushCommand implements Command {
 
     private final Log log = LogFactory.getLog(getClass());
 
@@ -50,7 +35,7 @@ public class InjectCommand implements Command {
 
     private CloseableHttpClient httpClient;
 
-    public InjectCommand(Shell shell, Map<String, Object> configuration) {
+    public PushCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
         httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
@@ -59,33 +44,29 @@ public class InjectCommand implements Command {
 
     @Override
     public String name() {
-        return "inject";
+        return "push";
     }
 
     @Override
     public Usage usage() {
-        return new Usage("inject <fault-name> [json-params]");
+        return new Usage("push <fault-jar>");
+
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void run(Line line) throws Exception {
-        if (line.args().size() > 0) {
-            Map<String, String> input = new LinkedHashMap<>();
-            String name = line.args().get(0);
-            input.put("name", name);
+        if (line.args().size() == 1) {
+            Path path = Paths.get(line.args().get(0));
 
-            if (line.args().size() > 1) {
-                input.put("params", String.join("", line.args().subList(1, line.args().size())));
+            if (Files.notExists(path)) {
+                shell.console().println("Fault jar [" + path + "] does not exist");
+                return;
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(input);
-            shell.console().println("Injecting fault [" + name + "]");
-            log.debug(json);
             String profile = (String) configuration.get("default");
-            HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/inject");
-            post.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
+            HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/push");
+            post.setEntity(MultipartEntityBuilder.create().addBinaryBody("jar", path.toFile()).build());
 
             try (CloseableHttpResponse response = httpClient.execute(post)) {
                 StatusLine status = response.getStatusLine();
@@ -93,10 +74,9 @@ public class InjectCommand implements Command {
                 log.debug(content);
 
                 if (status.getStatusCode() == HttpStatus.SC_OK) {
-                    Map<String, Object> output = mapper.readValue(content, new TypeReference<Map<String, Object>>() {});
-                    shell.console().println("Fault has been successfully scheduled with id [" + output.get("id") + "]");
+                    shell.console().println("Fault jar has been successfully saved");
                 } else {
-                    shell.console().println("Injecting fault failed in [" + status + "] for a reason of ["
+                    shell.console().println("Saving fault jar failed in [" + status + "] for a reason of ["
                     + content + "]");
                 }
             }

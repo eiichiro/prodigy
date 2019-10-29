@@ -15,19 +15,24 @@
  */
 package io.eiichiro.prodigy;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
-@Documented
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface Name {
+public class Scheduler {
 
-    String value();
+    public void schedule(Fault fault) {}
+
+    public void unschedule(String id) {}
+
+    public Entry get(String id) {
+        return null;
+    }
+
+    public List<Entry> list() {
+        return null;
+    }
+
+    public static class Entry {
+
+    }
 
 }

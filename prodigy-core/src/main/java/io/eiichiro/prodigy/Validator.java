@@ -15,8 +15,10 @@
  */
 package io.eiichiro.prodigy;
 
+import java.util.Set;
+
 public interface Validator {
 
-    public void validate() throws ViolationException;
+    public Set<Violation> validate();
     
 }

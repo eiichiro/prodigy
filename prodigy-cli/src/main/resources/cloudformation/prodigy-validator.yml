@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS CloudFormation template for Prodigy to create AWS Identity and Access Management (IAM) policy to grant validators access to user resources
+Parameters:
+  Profile:
+    Description: Prodigy deployment profile to grant validators access to user resources
+    Type: String
+    AllowedPattern: "[A-Za-z0-9]+"
+Resources:
+  ValidatorPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement: []
+      ManagedPolicyName: !Sub "prodigy-validator-${Profile}-${AWS::Region}"
+Outputs:
+  ValidatorPolicy:
+    Description: IAM policy ARN to grant validators access to user resources
+    Value: !Ref ValidatorPolicy
+    Export:
+      Name: !Sub "prodigy-validator-${Profile}"

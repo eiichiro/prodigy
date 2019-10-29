@@ -15,8 +15,19 @@
  */
 package io.eiichiro.prodigy;
 
-public class ViolationException extends RuntimeException {
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    private static final long serialVersionUID = 1L;
-    
+@Documented
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface Named {
+
+    String value();
+
 }

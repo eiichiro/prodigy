@@ -15,39 +15,47 @@
  */
 package io.eiichiro.prodigy;
 
-import org.eiichiro.reverb.system.Environment;
+import java.util.Map;
+import java.util.Set;
 
-public class Configuration {
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-    public static final String PRODIGY_FAULT_SCHEDULER = "PRODIGY_FAULT_SCHEDULER";
-    
-    public static final String PRODIGY_FAULT_REPOSITORY = "PRODIGY_FAULT_REPOSITORY";
-    
-    private final String scheduler;
+public class Container {
 
-    private final String repository;
+    private static Log log = LogFactory.getLog(Container.class);
 
-    public Configuration() {
-        this(Environment.getenv(PRODIGY_FAULT_SCHEDULER), Environment.getenv(PRODIGY_FAULT_REPOSITORY));
+    private final Scheduler scheduler;
+
+    private final Repository repository;
+
+    public Container() {
+        this(new Scheduler(), new Repository());
     }
 
-    public Configuration(String scheduler, String repository) {
+    public Container(Scheduler scheduler, Repository repository) {
         this.scheduler = scheduler;
         this.repository = repository;
     }
 
-    /**
-     * @return the scheduler
-     */
-    public String scheduler() {
+    public Scheduler scheduler() {
         return scheduler;
     }
 
-    /**
-     * @return the repository
-     */
-    public String repository() {
+    public Repository repository() {
         return repository;
+    }
+
+    public Fault fault(String id) {
+        return null;
+    }
+
+    public Fault fault(String name, Map<String, Object> params) {
+        return null;
+    }
+
+    public Set<Fault> faults() {
+        return null;
     }
 
 }

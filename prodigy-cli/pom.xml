@@ -15,13 +15,37 @@
 
   <name>prodigy-cli</name>
 
+  <repositories>
+    <repository>
+      <id>mulesoft</id>
+      <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+    </repository>
+  </repositories>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <prodigy.core.version>0.0.1-SNAPSHOT</prodigy.core.version>
+    <prodigy.faults.version>0.0.1-SNAPSHOT</prodigy.faults.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-cloudformation</artifactId>
+      <version>1.11.641</version>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+      <version>1.11.641</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.awslabs</groupId>
+      <artifactId>aws-request-signing-apache-interceptor</artifactId>
+      <version>b3772780da</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -29,15 +53,32 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.eiichiro.prodigy</groupId>
-      <artifactId>prodigy-core</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <groupId>org.eiichiro.ash</groupId>
       <artifactId>ash-java</artifactId>
       <version>0.0.2-SNAPSHOT</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.10</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+      <version>4.5.3</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.6</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.9</version>
     </dependency>
     <dependency>
       <groupId>commons-logging</groupId>
@@ -63,10 +104,52 @@
       <version>1.24</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.9.10</version>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <artifactItems>
+            <artifactItem>
+              <groupId>io.eiichiro.prodigy</groupId>
+              <artifactId>prodigy-core</artifactId>
+              <version>${prodigy.core.version}</version>
+            </artifactItem>
+            <artifactItem>
+              <groupId>io.eiichiro.prodigy</groupId>
+              <artifactId>prodigy-faults</artifactId>
+              <version>${prodigy.faults.version}</version>
+            </artifactItem>
+          </artifactItems>
+          <outputDirectory>${project.build.directory}/lib</outputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -93,7 +176,9 @@
       <plugin>
         <groupId>com.oracle.substratevm</groupId>
         <artifactId>native-image-maven-plugin</artifactId>
+        <version>19.2.0.1</version>
         <configuration>
+          <buildArgs>-H:IncludeResources=(.*.properties$|cloudformation/.*.yml|lib/.*.jar$)</buildArgs>
           <imageName>prodigy</imageName>
         </configuration>
         <executions>

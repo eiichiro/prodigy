@@ -15,16 +15,15 @@
  */
 package io.eiichiro.prodigy;
 
-public abstract class Fault {
+import java.io.InputStream;
+import java.util.Map;
 
-    private String id;
+public class Repository {
 
-    public String id() {
-        return id;
+    public Map<String, Class<? extends Fault>> load() {
+        return null;
     }
 
-    public void id(String id) {
-        this.id = id;
-    }
-
+    public void save(String name, InputStream jar) {}
+    
 }

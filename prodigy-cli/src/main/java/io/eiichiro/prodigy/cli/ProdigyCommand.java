@@ -86,27 +86,34 @@ public class ProdigyCommand implements Command {
 
         Map<String, Object> configuration = new LinkedHashMap<>();
         Shell shell = new Shell();
+        shell.register(new DeployCommand(shell, configuration, path));
+        log.debug("Command [" + DeployCommand.class.getName() + "] registered");
 
         if (Files.exists(path)) {
             Yaml yaml = new Yaml();
             configuration = yaml.load(Files.newBufferedReader(path));
             log.info("Configuration file [" + path + "] loaded");
+            shell.register(new InjectCommand(shell, configuration));
+            shell.register(new EjectCommand(shell, configuration));
+            shell.register(new ConfigureCommand(shell, configuration, path));
+            shell.register(new DeployCommand(shell, configuration, path));
+            shell.register(new StatusCommand(shell, configuration));
+            shell.register(new FaultsCommand(shell, configuration));
+            log.debug("Command [" + InjectCommand.class.getName() + "] registered");
+            log.debug("Command [" + EjectCommand.class.getName() + "] registered");
+            log.debug("Command [" + ConfigureCommand.class.getName() + "] registered");
+            log.debug("Command [" + DeployCommand.class.getName() + "] registered");
+            log.debug("Command [" + StatusCommand.class.getName() + "] registered");
+            log.debug("Command [" + FaultsCommand.class.getName() + "] registered");
         } else {
             log.debug("Configuration file [" + path + "] not found");
-        }
-
-        if (Files.exists(path)) {
-            shell.register(new InjectCommand(shell, configuration));
-            shell.register(new ConfigureCommand(shell, configuration, path));
-            log.debug("Command [" + InjectCommand.class.getName() + "] registered");
-            log.debug("Command [" + ConfigureCommand.class.getName() + "] registered");
-        } else {
             log.debug("Command [" + InjectCommand.class.getName() + "] disabled");
+            log.debug("Command [" + EjectCommand.class.getName() + "] disabled");
             log.debug("Command [" + ConfigureCommand.class.getName() + "] disabled");
+            log.debug("Command [" + DeployCommand.class.getName() + "] disabled");
+            log.debug("Command [" + StatusCommand.class.getName() + "] disabled");
+            log.debug("Command [" + FaultsCommand.class.getName() + "] disabled");
         }
-
-        shell.register(new DeployCommand(shell, configuration, path));
-        log.debug("Command [" + DeployCommand.class.getName() + "] registered");
 
         List<String> args = line.args();
 
@@ -128,7 +135,7 @@ public class ProdigyCommand implements Command {
             console.println(Colors.red(" |____|     |__|   \\____/\\____ | |__\\___  // ____|"));
             console.println(Colors.red("                              \\/   /_____/ \\/     "));
             console.println("");
-            console.println(Colors.red("Chaos Engineering experiments for AWS applications"));
+            console.println(Colors.red("Chaos Engineering experiment for AWS applications"));
             console.println("");
             console.println(
                     Colors.red("Welcome to Prodigy. Hit the TAB or press 'hint' to display available commands."));

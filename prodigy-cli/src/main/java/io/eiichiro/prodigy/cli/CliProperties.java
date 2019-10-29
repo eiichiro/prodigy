@@ -13,35 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.eiichiro.prodigy;
+package io.eiichiro.prodigy.cli;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public final class Prodigy {
+public class CliProperties extends Properties {
 
-    private static Log log = LogFactory.getLog(Prodigy.class);
+    private static final long serialVersionUID = 1L;
 
-    private static Configuration configuration = new Configuration();
-
-    private static Container container = new Container();
-
-    private Prodigy() {}
-
-    public static Configuration configuration() {
-        return configuration;
-    }
-
-    public static void configuration(Configuration configuration) {
-        Prodigy.configuration = configuration;
+    private final Log log = LogFactory.getLog(getClass());
+    
+    public void load() {
+        try (InputStream stream = CliProperties.class.getResourceAsStream("/cli.properties")) {
+            load(stream);
+        } catch (IOException e) {
+            log.warn("Unable to load Prodigy CLI properties", e);
+        }
     }
     
-    public static Container container() {
-        return container;
+    public String version(String key) {
+        return getProperty("version." + key);
     }
-
-    public static void container(Container container) {
-        Prodigy.container = container;
+    
+    public String dependency(String key) {
+        return getProperty("dependency." + key);
     }
 
 }
