@@ -11,6 +11,7 @@
     <module>prodigy-core</module>
     <module>prodigy-faults</module>
     <module>prodigy-cli</module>
+    <module>prodigy-examples</module>
   </modules>
 
   <licenses>

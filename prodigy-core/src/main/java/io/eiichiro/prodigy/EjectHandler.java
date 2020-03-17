@@ -12,8 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.logging.Log;
 
-import io.eiichiro.prodigy.Scheduler.Entry;
-
 public class EjectHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final Log log = LambdaLogFactory.getLog(getClass());
@@ -24,24 +22,24 @@ public class EjectHandler implements RequestHandler<APIGatewayProxyRequestEvent,
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> request = mapper.readValue(input.getBody(), new TypeReference<Map<String, Object>>() {
+            Map<String, String> request = mapper.readValue(input.getBody(), new TypeReference<Map<String, String>>() {
             });
-            Object object = request.get("id");
-            String id;
-        
-            if (object != null) {
-                id = object.toString();
-            } else {
+            String id = request.get("id");
+
+            if (id == null) {
                 return output.withStatusCode(400).withBody("Parameter 'id' is required");
             }
 
-            Entry entry = Prodigy.container().scheduler().get(id);
+            log.info("Ejecting fault id [" + id + "]");
+            boolean result = Prodigy.container().scheduler().unschedule(id);
 
-            if (entry == null) {
-                return output.withStatusCode(400).withBody("Fault id [" + id + "] not found");
+            if (!result) {
+                String message = "Fault id [" + id + "] not found";
+                log.warn(message);
+                return output.withStatusCode(400).withBody(message);
             }
 
-            Prodigy.container().scheduler().unschedule(id);
+            log.info("Fault id [" + id + "] ejected");
             return output.withStatusCode(200).withBody(mapper.writeValueAsString("{}"));
         } catch (JsonParseException e) {
             String message = "Parameter must be JSON object: " + e.getMessage();

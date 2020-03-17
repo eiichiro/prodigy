@@ -17,4 +17,6 @@ package io.eiichiro.prodigy;
 
 public interface Interceptor {
 
+    public boolean intercept(Invocation invocation) throws Throwable;
+
 }

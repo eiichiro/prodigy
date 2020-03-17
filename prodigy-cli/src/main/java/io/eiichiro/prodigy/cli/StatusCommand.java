@@ -40,8 +40,10 @@ public class StatusCommand implements Command {
     public StatusCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
+        AWS4Signer signer = new AWS4Signer();
+        signer.setServiceName("execute-api");
         httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                new AWS4Signer(), DefaultAWSCredentialsProviderChain.getInstance())).build();
+                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
     }
 
     @Override
@@ -99,28 +101,34 @@ public class StatusCommand implements Command {
                     }
 
                     MutableInt length = new MutableInt();
-                    output.sort((e1, e2) -> {
-                        String n1 = (String) e1.get("name");
-                        String n2 = (String) e2.get("name");
-                        length.setValue(Math.max(n1.length(), n2.length()));
-                        int i = n1.compareTo(n2);
 
-                        if (i == 0) {
-                            return ((String) e1.get("status")).compareTo((String) e2.get("status"));
-                        }
-
-                        return i;
-                    });
+                    if (output.size() == 1) {
+                        length.setValue(((String) output.get(0).get("name")).length());
+                    } else {
+                        output.sort((e1, e2) -> {
+                            String n1 = (String) e1.get("name");
+                            String n2 = (String) e2.get("name");
+                            length.setValue(Math.max(n1.length(), n2.length()));
+                            int i = n1.compareTo(n2);
+    
+                            if (i == 0) {
+                                return ((String) e1.get("status")).compareTo((String) e2.get("status"));
+                            }
+    
+                            return i;
+                        });
+                    }
+                    
                     shell.console().println(StringUtils.rightPad("name", length.intValue() + 1)
                             + StringUtils.rightPad("id", 8 + 1) + "status");
                     shell.console().println(StringUtils.repeat("-", length.intValue()) + " "
-                            + StringUtils.repeat("-", 8) + " " + StringUtils.repeat("-", 7));
+                            + StringUtils.repeat("-", 8) + " " + StringUtils.repeat("-", 8));
                     output.forEach(e -> shell.console().println(StringUtils.rightPad((String) e.get("name"), length.intValue()) 
                             + " " + e.get("id") + " " + e.get("status")));
                 }
 
             } else {
-                shell.console().println("Listing fault status failed in [" + status + "] for a reason of [" + content + "]");
+                log.warn("Listing fault status failed in [" + status + "] for a reason of [" + content + "]");
             }
         }
     }

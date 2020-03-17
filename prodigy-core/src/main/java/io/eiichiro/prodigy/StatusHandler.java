@@ -1,5 +1,7 @@
 package io.eiichiro.prodigy;
 
+import java.util.Map;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -13,13 +15,19 @@ import io.eiichiro.prodigy.Scheduler.Entry;
 public class StatusHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final Log log = LambdaLogFactory.getLog(getClass());
-    
+
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent output = new APIGatewayProxyResponseEvent();
 
         try {
-            String id = input.getQueryStringParameters().get("id");
+            Map<String, String> queryStringParameters = input.getQueryStringParameters();
+            String id = null;
+
+            if (queryStringParameters != null) {
+                id = queryStringParameters.get("id");
+            }
+            
             Object response;
 
             if (id == null) {

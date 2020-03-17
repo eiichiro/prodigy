@@ -16,7 +16,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.eiichiro.ash.Command;
@@ -32,13 +32,15 @@ public class EjectCommand implements Command {
 
     private final Map<String, Object> configuration;
 
-    private CloseableHttpClient httpClient;
+    private HttpClientBuilder httpClientBuilder;
 
     public EjectCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
-        httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                new AWS4Signer(), DefaultAWSCredentialsProviderChain.getInstance())).build();
+        AWS4Signer signer = new AWS4Signer();
+        signer.setServiceName("execute-api");
+        httpClientBuilder = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
+                signer, DefaultAWSCredentialsProviderChain.getInstance()));
     }
 
     @Override
@@ -59,31 +61,33 @@ public class EjectCommand implements Command {
             String id = line.args().get(0);
             input.put("id", id);
             String json = new ObjectMapper().writeValueAsString(input);
-            shell.console().println("Ejecting fault id [" + id + "]");
+            log.info("Ejecting fault id [" + id + "]");
             log.debug(json);
             String profile = (String) configuration.get("default");
             HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/eject");
             post.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
-            try (CloseableHttpResponse response = httpClient.execute(post)) {
+            try (CloseableHttpResponse response = httpClientBuilder.build().execute(post)) {
                 StatusLine status = response.getStatusLine();
                 String content = EntityUtils.toString(response.getEntity(), ContentType.APPLICATION_JSON.getCharset());
                 log.debug(content);
 
                 if (status.getStatusCode() == HttpStatus.SC_OK) {
-                    shell.console().println("Fault has been successfully scheduled");
+                    shell.console().println("Fault has been successfully ejected");
                 } else {
-                    shell.console().println("Ejecting fault failed in [" + status + "] for a reason of [" + content + "]");
+                    log.warn("Ejecting fault failed in [" + status + "] for a reason of [" + content + "]");
                 }
             }
+
+            return;
         }
 
         shell.console().println("Unsupported usage");
         shell.console().println(usage().toString());
     }
 
-    public void httpClient(CloseableHttpClient httpClient) {
-        this.httpClient = httpClient;
+    public void httpClientBuilder(HttpClientBuilder httpClientBuilder) {
+        this.httpClientBuilder = httpClientBuilder;
     }
 
 }

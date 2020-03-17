@@ -53,8 +53,10 @@ public class InjectCommand implements Command {
     public InjectCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
+        AWS4Signer signer = new AWS4Signer();
+        signer.setServiceName("execute-api");
         httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                new AWS4Signer(), DefaultAWSCredentialsProviderChain.getInstance())).build();
+                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
     }
 
     @Override
@@ -81,10 +83,11 @@ public class InjectCommand implements Command {
 
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(input);
-            shell.console().println("Injecting fault [" + name + "]");
+            log.info("Injecting fault [" + name + "]");
             log.debug(json);
             String profile = (String) configuration.get("default");
-            HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/inject");
+            HttpPost post = new HttpPost(
+                    ((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/inject");
             post.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
             try (CloseableHttpResponse response = httpClient.execute(post)) {
@@ -93,13 +96,15 @@ public class InjectCommand implements Command {
                 log.debug(content);
 
                 if (status.getStatusCode() == HttpStatus.SC_OK) {
-                    Map<String, Object> output = mapper.readValue(content, new TypeReference<Map<String, Object>>() {});
-                    shell.console().println("Fault has been successfully scheduled with id [" + output.get("id") + "]");
+                    Map<String, Object> output = mapper.readValue(content, new TypeReference<Map<String, Object>>() {
+                    });
+                    shell.console().println("Fault has been successfully injected with id [" + output.get("id") + "]");
                 } else {
-                    shell.console().println("Injecting fault failed in [" + status + "] for a reason of ["
-                    + content + "]");
+                    log.warn("Injecting fault failed in [" + status + "] for a reason of [" + content + "]");
                 }
             }
+
+            return;
         }
 
         shell.console().println("Unsupported usage");

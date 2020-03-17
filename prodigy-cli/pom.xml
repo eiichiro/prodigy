@@ -53,9 +53,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>3.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.eiichiro.ash</groupId>
       <artifactId>ash-java</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>0.0.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -73,7 +79,6 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.6</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -99,14 +104,13 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>1.24</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+      <version>2.9.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
       <version>2.9.10</version>
     </dependency>
   </dependencies>
@@ -115,81 +119,44 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
+        <filtering>true</filtering>
         <includes>
+          <include>**/*.yml</include>
           <include>**/*.properties</include>
         </includes>
-        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/*.yml</exclude>
+          <exclude>**/*.properties</exclude>
+        </excludes>
       </resource>
     </resources>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <artifactItems>
-            <artifactItem>
-              <groupId>io.eiichiro.prodigy</groupId>
-              <artifactId>prodigy-core</artifactId>
-              <version>${prodigy.core.version}</version>
-            </artifactItem>
-            <artifactItem>
-              <groupId>io.eiichiro.prodigy</groupId>
-              <artifactId>prodigy-faults</artifactId>
-              <version>${prodigy.faults.version}</version>
-            </artifactItem>
-          </artifactItems>
-          <outputDirectory>${project.build.directory}/lib</outputDirectory>
-        </configuration>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>2.1.0</version>
         <executions>
           <execution>
-            <id>copy</id>
             <phase>package</phase>
             <goals>
-              <goal>copy</goal>
+              <goal>assemble</goal>
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-            <manifest>
+          <assembleDirectory>${project.build.directory}</assembleDirectory>
+          <licenseHeaderFile>${basedir}/license-header.txt</licenseHeaderFile>
+          <programs>
+            <program>
               <mainClass>io.eiichiro.prodigy.cli.Main</mainClass>
-            </manifest>
-          </archive>
+              <id>prodigy</id>
+            </program>
+          </programs>
         </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.oracle.substratevm</groupId>
-        <artifactId>native-image-maven-plugin</artifactId>
-        <version>19.2.0.1</version>
-        <configuration>
-          <buildArgs>-H:IncludeResources=(.*.properties$|cloudformation/.*.yml|lib/.*.jar$)</buildArgs>
-          <imageName>prodigy</imageName>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-native-image</id>
-            <phase>package</phase>
-            <goals>
-              <goal>native-image</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->

@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters: 
+  ProdigyProfile: 
+    Type: String
+Globals: 
+  Function: 
+    Runtime: java8
+    MemorySize: 256
+    Timeout: 30
+Resources:
+  OrderHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./target/sushi.jar
+      Handler: prodigy.examples.sushi.OrderHandler::handleRequest
+      Environment: 
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Sub "prodigy-${ProdigyProfile}-scheduler"
+          PRODIGY_FAULT_REPOSITORY: !Sub "prodigy-${ProdigyProfile}-repository-${AWS::Region}-${AWS::AccountId}"
+      Policies: 
+        - !Sub "arn:aws:iam::${AWS::AccountId}:policy/prodigy-${ProdigyProfile}-${AWS::Region}"
+        - DynamoDBCrudPolicy: 
+            TableName: !Ref ItemTable
+      Events: 
+        OrderApi: 
+          Type: Api
+          Properties: 
+            Path: /order
+            Method: POST
+  RestockHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./target/sushi.jar
+      Handler: prodigy.examples.sushi.RestockHandler::handleRequest
+      Policies: 
+        - DynamoDBCrudPolicy: 
+            TableName: !Ref ItemTable
+      Events: 
+        RestockApi: 
+          Type: Api
+          Properties: 
+            Path: /restock
+            Method: POST
+  ItemTable: 
+    Type: AWS::Serverless::SimpleTable
+    Properties: 
+      TableName: item
+      PrimaryKey: 
+        Name: name
+        Type: String
+Outputs: 
+  Endpoint: 
+    Description: Prodigy Sushi API endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod"

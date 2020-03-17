@@ -1,0 +1,2 @@
+io.eiichiro.prodigy.faults.DummyFault
+io.eiichiro.prodigy.faults.AmazonDynamoDBErrorFault

@@ -7,7 +7,7 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-            SSEAlgorithm: aws:kms
+              SSEAlgorithm: AES256
       BucketName: !Sub "prodigy-core-${AWS::Region}-${AWS::AccountId}"
 Outputs:
   CoreBucket:

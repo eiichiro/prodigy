@@ -38,8 +38,10 @@ public class PushCommand implements Command {
     public PushCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
+        AWS4Signer signer = new AWS4Signer();
+        signer.setServiceName("execute-api");
         httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                new AWS4Signer(), DefaultAWSCredentialsProviderChain.getInstance())).build();
+                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
     }
 
     @Override
@@ -60,10 +62,11 @@ public class PushCommand implements Command {
             Path path = Paths.get(line.args().get(0));
 
             if (Files.notExists(path)) {
-                shell.console().println("Fault jar [" + path + "] does not exist");
+                log.warn("Fault jar [" + path + "] does not exist");
                 return;
             }
 
+            log.info("Pushing jar [" + path + "]");
             String profile = (String) configuration.get("default");
             HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/push");
             post.setEntity(MultipartEntityBuilder.create().addBinaryBody("jar", path.toFile()).build());
@@ -74,9 +77,9 @@ public class PushCommand implements Command {
                 log.debug(content);
 
                 if (status.getStatusCode() == HttpStatus.SC_OK) {
-                    shell.console().println("Fault jar has been successfully saved");
+                    shell.console().println("Fault jar has been successfully pushed");
                 } else {
-                    shell.console().println("Saving fault jar failed in [" + status + "] for a reason of ["
+                    log.warn("Saving fault jar failed in [" + status + "] for a reason of ["
                     + content + "]");
                 }
             }

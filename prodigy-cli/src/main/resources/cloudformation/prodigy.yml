@@ -5,9 +5,6 @@ Parameters:
     Description: Prodigy deployment profile to create AWS resources
     Type: String
     AllowedPattern: "[A-Za-z0-9]+"
-  Version:
-    Description: Prodigy core assets version
-    Type: String
   Stage:
     Description: Prodigy API deployment stage
     Type: String
@@ -19,31 +16,24 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "id"
           AttributeType: S
-        - AttributeName: "name"
-          AttributeType: S
-        - AttributeName: "status"
-          AttributeType: S
-        - AttributeName: "params"
-          AttributeType: S
-        - AttributeName: "ttl"
-          AttributeType: N
       KeySchema:
         - AttributeName: "id"
           KeyType: HASH
       StreamSpecification:
-        StreamViewType: NEW_IMAGE
-      TableName: !Sub "prodigy-scheduler-${Profile}"
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TableName: !Sub "prodigy-${Profile}-scheduler"
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: true
+      BillingMode: PAY_PER_REQUEST
   RepositoryBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-            SSEAlgorithm: AES256
-      BucketName: !Sub "prodigy-repository-${Profile}-${AWS::Region}-${AWS::AccountId}"
+              SSEAlgorithm: AES256
+      BucketName: !Sub "prodigy-${Profile}-repository-${AWS::Region}-${AWS::AccountId}"
   ProdigyPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -93,8 +83,8 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - !Ref ProdigyPolicy
-        - Fn::ImportValue: !Sub "prodigy-validator-${Profile}"
-      RoleName: !Sub "prodigy-api-handler-${Profile}-${AWS::Region}"
+        - Fn::ImportValue: !Sub "prodigy-${Profile}-validator"
+      RoleName: !Sub "prodigy-${Profile}-api-handler-${AWS::Region}"
   SchedulerHandlerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -109,92 +99,109 @@ Resources:
               - "sts:AssumeRole"
       ManagedPolicyArns:
         - !Ref ProdigyPolicy
-        - Fn::ImportValue: !Sub "prodigy-controller-${Profile}"
-      RoleName: !Sub "prodigy-scheduler-handler-${Profile}-${AWS::Region}"
+        - Fn::ImportValue: !Sub "prodigy-${Profile}-controller"
+      RoleName: !Sub "prodigy-${Profile}-scheduler-handler-${AWS::Region}"
   InjectHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-api-handler-inject-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-api-handler-inject"
       Handler: "io.eiichiro.prodigy.InjectHandler"
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
   EjectHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-api-handler-eject-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-api-handler-eject"
       Handler: "io.eiichiro.prodigy.EjectHandler"
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
   StatusHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-api-handler-status-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-api-handler-status"
       Handler: "io.eiichiro.prodigy.StatusHandler"
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
   PushHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-api-handler-push-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-api-handler-push"
       Handler: "io.eiichiro.prodigy.PushHandler"
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
   FaultsHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-api-handler-faults-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-api-handler-faults"
       Handler: "io.eiichiro.prodigy.FaultsHandler"
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
   SchedulerHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket: !ImportValue "prodigy-core"
-        S3Key: !Sub "prodigy-core-${Version}.jar"
+        S3Key: !Sub "prodigy-core-${prodigy.core.version}-jar-with-dependencies.jar"
       Environment:
-        - PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
-        - PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
-      FunctionName: !Sub "prodigy-scheduler-handler-${Profile}"
+        Variables: 
+          PRODIGY_FAULT_SCHEDULER: !Ref SchedulerTable
+          PRODIGY_FAULT_REPOSITORY: !Ref RepositoryBucket
+      FunctionName: !Sub "prodigy-${Profile}-scheduler-handler"
       Handler: "io.eiichiro.prodigy.SchedulerHandler"
       Role: !GetAtt SchedulerHandlerRole.Arn
       Runtime: java8
       Timeout: 900
+      MemorySize: 256
   ProdigyApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -260,7 +267,7 @@ Resources:
       HttpMethod: GET
       Integration:
         Type: AWS_PROXY
-        IntegrationHttpMethod: GET
+        IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusHandlerFunction.Arn}/invocations"
       ResourceId: !Ref StatusResource
       RestApiId: !Ref ProdigyApi
@@ -282,7 +289,7 @@ Resources:
       HttpMethod: GET
       Integration:
         Type: AWS_PROXY
-        IntegrationHttpMethod: GET
+        IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FaultsHandlerFunction.Arn}/invocations"
       ResourceId: !Ref FaultsResource
       RestApiId: !Ref ProdigyApi
@@ -291,50 +298,51 @@ Resources:
     Properties:
       RestApiId: !Ref ProdigyApi
       StageName: !Ref Stage
-      DependsOn:
-        - InjectMethod
-        - EjectMethod
-        - ListMethod
-        - PushMethod
-        - FaultsMethod
+    DependsOn:
+      - InjectMethod
+      - EjectMethod
+      - StatusMethod
+      - PushMethod
+      - FaultsMethod
   InjectHandlerPermission:
     Type: AWS::Lambda::Permission
-    Action: "lambda:InvokeFunction"
-    FunctionName: !Ref InjectHandlerFunction
-    Principal: "apigateway.amazonaws.com"
-    SourceAccount: !Ref AWS::AccountId
-    SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/inject"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref InjectHandlerFunction
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/inject"
   EjectHandlerPermission:
     Type: AWS::Lambda::Permission
-    Action: "lambda:InvokeFunction"
-    FunctionName: !Ref EjectHandlerFunction
-    Principal: "apigateway.amazonaws.com"
-    SourceAccount: !Ref AWS::AccountId
-    SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/eject"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref EjectHandlerFunction
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/eject"
   StatusHandlerPermission:
     Type: AWS::Lambda::Permission
-    Action: "lambda:InvokeFunction"
-    FunctionName: !Ref StatusHandlerFunction
-    Principal: "apigateway.amazonaws.com"
-    SourceAccount: !Ref AWS::AccountId
-    SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/GET/status"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref StatusHandlerFunction
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/GET/status"
   PushHandlerPermission:
     Type: AWS::Lambda::Permission
-    Action: "lambda:InvokeFunction"
-    FunctionName: !Ref PushHandlerFunction
-    Principal: "apigateway.amazonaws.com"
-    SourceAccount: !Ref AWS::AccountId
-    SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/push"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref PushHandlerFunction
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/POST/push"
   FaultsHandlerPermission:
     Type: AWS::Lambda::Permission
-    Action: "lambda:InvokeFunction"
-    FunctionName: !Ref FaultsHandlerFunction
-    Principal: "apigateway.amazonaws.com"
-    SourceAccount: !Ref AWS::AccountId
-    SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/GET/faults"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref FaultsHandlerFunction
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ProdigyApi}/${Stage}/GET/faults"
   EventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
+      BatchSize: 1
       EventSourceArn: !GetAtt SchedulerTable.StreamArn
       FunctionName: !Ref SchedulerHandlerFunction
       StartingPosition: LATEST
@@ -342,3 +350,9 @@ Outputs:
   Endpoint:
     Description: Prodigy API endpoint URL
     Value: !Sub "https://${ProdigyApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}"
+  Scheduler:
+    Description: DynamoDB table name for Prodigy fault scheduler
+    Value: !Ref SchedulerTable
+  Repository:
+    Description: S3 bucket name for Prodigy fault repository
+    Value: !Ref RepositoryBucket

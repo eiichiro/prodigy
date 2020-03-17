@@ -11,11 +11,14 @@ Resources:
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
-        Statement: []
-      ManagedPolicyName: !Sub "prodigy-controller-${Profile}-${AWS::Region}"
+        Statement: 
+          - Effect: "Allow"
+            NotAction: "iam:*"
+            Resource: "*"
+      ManagedPolicyName: !Sub "prodigy-${Profile}-controller-${AWS::Region}"
 Outputs:
   ControllerPolicy:
     Description: IAM policy ARN to grant controllers access to user resources
     Value: !Ref ControllerPolicy
     Export:
-      Name: !Sub "prodigy-controller-${Profile}"
+      Name: !Sub "prodigy-${Profile}-controller"

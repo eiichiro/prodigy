@@ -15,12 +15,12 @@
  */
 package io.eiichiro.prodigy;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.lang.reflect.Proxy;
+import java.util.List;
+
+import org.apache.commons.lang3.ClassUtils;
 
 public final class Prodigy {
-
-    private static Log log = LogFactory.getLog(Prodigy.class);
 
     private static Configuration configuration = new Configuration();
 
@@ -35,13 +35,26 @@ public final class Prodigy {
     public static void configuration(Configuration configuration) {
         Prodigy.configuration = configuration;
     }
-    
+
     public static Container container() {
         return container;
     }
 
     public static void container(Container container) {
         Prodigy.container = container;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T adapt(T target) {
+        List<Class<?>> interfaces = ClassUtils.getAllInterfaces(target.getClass());
+        Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces.toArray(new Class[] {}),
+                new ClientInvocationHandler(target));
+        try {
+            T client = (T) proxy;
+            return client;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("", e);
+        }
     }
 
 }

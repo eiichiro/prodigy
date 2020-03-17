@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
+ * Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +26,7 @@ public class Main {
 
     public static void main(String[] args) {
         Shell shell = new Shell();
-        ProdigyCommand prodigy = new ProdigyCommand();
+        ProdigyCommand prodigy = new ProdigyCommand(new Shell());
         shell.register(prodigy);
         String line = prodigy.name() + " " + StringUtils.join(args, " ");
         shell.exec(line);

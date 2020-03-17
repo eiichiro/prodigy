@@ -1,6 +1,6 @@
 Prodigy
 ===
-Prodigy is an open-source [Chaos Engineering](http://principlesofchaos.org/) experiments system for AWS applications.
+Prodigy is an open-source [Chaos Engineering](http://principlesofchaos.org/) experiment framework for AWS Java applications.
 
 ```
 __________                   .___.__              

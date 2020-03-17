@@ -19,13 +19,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eiichiro.ash.Command;
 import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
-import org.yaml.snakeyaml.Yaml;
 
 public class ConfigureCommand implements Command {
 
@@ -50,29 +52,35 @@ public class ConfigureCommand implements Command {
 
     @Override
     public Usage usage() {
-        Usage usage = new Usage("configure [options] <profile> [json-params]");
+        Usage usage = new Usage("configure [options] <profile>");
         usage.option(null, "default", false, "set <profile> as default");
         return usage;
     }
 
     @Override
     public void run(Line line) throws Exception {
-		if (line.options().containsKey("default")) {
-            if (line.args().size() == 1) {
-                String profile = line.args().get(0);
+        if (line.args().size() == 1) {
+            String profile = line.args().get(0);
 
-                if (!configuration.containsKey(profile)) {
-                    shell.console().println("Profile [" + profile + "] does not exist. Run deploy <profile> command first");
-                    return;
-                }
+            if (!configuration.containsKey(profile)) {
+                log.warn("Profile [" + profile + "] does not exist. Run deploy <profile> command first");
+                return;
+            }
 
+            if (line.options().containsKey("default")) {
                 configuration.put("default", profile);
-                Yaml yaml = new Yaml();
-                yaml.dump(configuration, Files.newBufferedWriter(path));
-                shell.console().prompt("prodigy - " + profile + "> ");
-                shell.console().println("Default profile has been updated with [" + profile + "]");
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                mapper.writeValue(path.toFile(), configuration);
+                shell.console().prompt("prodigy|" + profile + "> ");
+                log.info("Default profile has been updated with [" + profile + "]");
                 log.debug("Configuration file [" + path + "] updated");
-                Files.readAllLines(path).stream().forEach(log::debug);
+                Files.readAllLines(path).stream().forEach(shell.console()::println);
+                return;
+            }
+
+        } else if (line.args().isEmpty()) {
+            if (line.options().isEmpty()) {
+                Files.readAllLines(path).stream().forEach(shell.console()::println);
                 return;
             }
         }

@@ -11,11 +11,14 @@ Resources:
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
-        Statement: []
-      ManagedPolicyName: !Sub "prodigy-validator-${Profile}-${AWS::Region}"
+        Statement: 
+          - Effect: "Allow"
+            NotAction: "iam:*"
+            Resource: "*"
+      ManagedPolicyName: !Sub "prodigy-${Profile}-validator-${AWS::Region}"
 Outputs:
   ValidatorPolicy:
     Description: IAM policy ARN to grant validators access to user resources
     Value: !Ref ValidatorPolicy
     Export:
-      Name: !Sub "prodigy-validator-${Profile}"
+      Name: !Sub "prodigy-${Profile}-validator"

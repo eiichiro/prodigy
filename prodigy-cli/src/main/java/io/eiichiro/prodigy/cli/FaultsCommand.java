@@ -1,7 +1,7 @@
 package io.eiichiro.prodigy.cli;
 
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -40,8 +40,10 @@ public class FaultsCommand implements Command {
     public FaultsCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
+        AWS4Signer signer = new AWS4Signer();
+        signer.setServiceName("execute-api");
         httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                new AWS4Signer(), DefaultAWSCredentialsProviderChain.getInstance())).build();
+                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
     }
 
     @Override
@@ -69,37 +71,28 @@ public class FaultsCommand implements Command {
 
             if (status.getStatusCode() == HttpStatus.SC_OK) {
                 ObjectMapper mapper = new ObjectMapper();
-                List<Map<String, Object>> output = mapper.readValue(content,
-                new TypeReference<List<Map<String, Object>>>() {
+                Map<String, String> output = mapper.readValue(content,
+                new TypeReference<Map<String, String>>() {
                 });
 
                 if (output.isEmpty()) {
-                    shell.console().println("No fault status listed in repository");
+                    shell.console().println("No fault classes listed in repository");
                 } else {
                     MutableInt name = new MutableInt();
                     MutableInt clazz = new MutableInt();
-                    output.sort((e1, e2) -> {
-                        String n1 = (String) e1.get("name");
-                        String n2 = (String) e2.get("name");
-                        String c1 = (String) e1.get("class");
-                        String c2 = (String) e2.get("class");
-                        name.setValue(Math.max(n1.length(), n2.length()));
-                        clazz.setValue(Math.max(c1.length(), c2.length()));
-                        int i = n1.compareTo(n2);
-
-                        if (i == 0) {
-                            return c1.compareTo(c2);
-                        }
-
-                        return i;
+                    Map<String, String> o = new TreeMap<>((e1, e2) -> {
+                        name.setValue(Math.max(e1.length(), e2.length()));
+                        clazz.setValue(Math.max(output.get(e1).length(), output.get(e2).length()));
+                        return e1.compareTo(e2);
                     });
+                    o.putAll(output);
                     shell.console().println(StringUtils.rightPad("name", name.intValue() + 1) + "class");
                     shell.console().println(StringUtils.repeat("-", name.intValue()) + " " + StringUtils.repeat("-", clazz.intValue()));
-                    output.forEach(e -> shell.console().println(StringUtils.rightPad((String) e.get("name"), name.intValue()) + e.get("class")));
+                    o.forEach((k, v) -> shell.console().println(StringUtils.rightPad(k, name.intValue() + 1) + v));
                 }
                 
             } else {
-                shell.console().println("Listing fault classes failed in [" + status + "] for a reason of [" + content + "]");
+                log.warn("Listing fault classes failed in [" + status + "] for a reason of [" + content + "]");
             }
         }
     }

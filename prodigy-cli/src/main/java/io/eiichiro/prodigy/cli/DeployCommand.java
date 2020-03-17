@@ -27,12 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
 import com.amazonaws.services.cloudformation.model.Capability;
 import com.amazonaws.services.cloudformation.model.ChangeSetType;
 import com.amazonaws.services.cloudformation.model.CreateChangeSetRequest;
+import com.amazonaws.services.cloudformation.model.DeleteChangeSetRequest;
+import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeChangeSetRequest;
 import com.amazonaws.services.cloudformation.model.DescribeChangeSetResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
@@ -44,15 +47,18 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.io.ByteStreams;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eiichiro.ash.Command;
 import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
-import org.yaml.snakeyaml.Yaml;
 
 public class DeployCommand implements Command {
 
@@ -64,14 +70,16 @@ public class DeployCommand implements Command {
 
     private final Path path;
 
-    private AmazonCloudFormation cloudFormation = AmazonCloudFormationClientBuilder.defaultClient();
+    private AmazonCloudFormation cloudFormation;
 
-    private AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+    private AmazonS3 s3;
 
     public DeployCommand(Shell shell, Map<String, Object> configuration, Path path) {
         this.shell = shell;
         this.configuration = configuration;
         this.path = path;
+        cloudFormation = AmazonCloudFormationClientBuilder.standard().build();
+        s3 = AmazonS3ClientBuilder.standard().build();
     }
 
     @Override
@@ -81,7 +89,7 @@ public class DeployCommand implements Command {
 
     @Override
     public Usage usage() {
-        return new Usage("deploy <profile>");
+        return new Usage("deploy <profile> ('deploy core' is not allowed)");
     }
 
     @Override
@@ -89,20 +97,48 @@ public class DeployCommand implements Command {
         if (line.args().size() == 1) {
             String profile = line.args().get(0);
 
-            if (profile != null && !profile.isEmpty()) {
+            if (profile != null && !profile.isEmpty() && !profile.equals("core")) {
                 try {
-                    configuration.put(profile, deploy(profile));
+                    Map<String, String> c = deploy(profile);
                     configuration.put("default", profile);
-                    Yaml yaml = new Yaml();
-                    yaml.dump(configuration, Files.newBufferedWriter(path));
-                    shell.console().prompt("prodigy - " + profile + "> ");
-                    shell.console().println("Default profile has been updated with [" + profile + "]");
+                    configuration.put(profile, c);
+
+                    if (Files.notExists(path)) {
+                        FileUtils.touch(path.toFile());
+                    }
+
+                    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                    mapper.writeValue(path.toFile(), configuration);
+                    shell.console().prompt("prodigy|" + profile + "> ");
+                    log.info("Default profile has been updated with [" + profile + "]");
                     log.debug("Configuration file [" + path + "] updated");
                     Files.readAllLines(path).stream().forEach(log::debug);
+                    Command command = new ConfigureCommand(shell, configuration, path);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + ConfigureCommand.class.getName() + "] enabled");
+                    }
+
+                    command = new InjectCommand(shell, configuration);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + InjectCommand.class.getName() + "] enabled");
+                    }
+
+                    command = new EjectCommand(shell, configuration);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + EjectCommand.class.getName() + "] enabled");
+                    }
+
+                    shell.console().println("Prodigy has been successfully deployed for profile [" + profile + "]");
                 } catch (Exception e) {
-                    shell.console().println(e.getMessage());
+                    log.warn(e.getMessage(), e);
                 }
-                
+
                 return;
             }
         }
@@ -122,52 +158,86 @@ public class DeployCommand implements Command {
     private Map<String, String> deploy(String profile) throws Exception {
         List<Output> outputs = deploy("prodigy-core", "/cloudformation/prodigy-core.yml", false, new ArrayList<>());
         CliProperties properties = new CliProperties();
+        properties.load();
         String coreJar = properties.dependency("prodigy.core");
         String coreBucket = outputs.get(0).getOutputValue();
-        shell.console().println("Uploading core asset [" + coreJar + "] to [" + coreBucket + "]");
-        byte[] bytes = IOUtils.toByteArray(DeployCommand.class.getResourceAsStream("/lib/" + coreJar));
+        log.info("Uploading core asset [" + coreJar + "] to [" + coreBucket + "]");
+        byte[] bytes = ByteStreams.toByteArray(DeployCommand.class.getResourceAsStream("/lib/" + coreJar));
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(bytes.length);
         s3.putObject(coreBucket, coreJar, new ByteArrayInputStream(bytes), metadata);
-        shell.console().println("Core asset [" + coreJar + "] uploaded to [" + coreBucket + "]");
+        log.info("Core asset [" + coreJar + "] uploaded to [" + coreBucket + "]");
 
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(new Parameter().withParameterKey("Profile").withParameterValue(profile));
-        deploy("prodigy-validator-" + profile, "/cloudformation/prodigy-validator.yml", false, parameters,
+        deploy("prodigy-" + profile + "-validator", "/cloudformation/prodigy-validator.yml", false, parameters,
                 Capability.CAPABILITY_NAMED_IAM);
-        deploy("prodigy-controller-" + profile, "/cloudformation/prodigy-controller.yml", false, parameters,
+        deploy("prodigy-" + profile + "-controller", "/cloudformation/prodigy-controller.yml", false, parameters,
                 Capability.CAPABILITY_NAMED_IAM);
 
-        parameters.add(new Parameter().withParameterKey("Version")
-                .withParameterValue(coreJar.substring("prodigy-core-".length(), coreJar.lastIndexOf(".jar", 0))));
         outputs = deploy("prodigy-" + profile, "/cloudformation/prodigy.yml", true, parameters,
                 Capability.CAPABILITY_NAMED_IAM);
         Map<String, String> configuration = new LinkedHashMap<>();
         outputs.forEach(o -> configuration.put(o.getOutputKey().toLowerCase(), o.getOutputValue()));
         String faultsJar = properties.dependency("prodigy.faults");
         String repository = configuration.get("repository");
-        shell.console().println("Uploading fault asset [" + faultsJar + "] to [" + repository + "]");
-        byte[] bs = IOUtils.toByteArray(DeployCommand.class.getResourceAsStream("/lib/" + faultsJar));
+        log.info("Uploading fault asset [" + faultsJar + "] to [" + repository + "]");
+        byte[] bs = ByteStreams.toByteArray(DeployCommand.class.getResourceAsStream("/lib/" + faultsJar));
         ObjectMetadata m = new ObjectMetadata();
         m.setContentLength(bs.length);
         s3.putObject(repository, faultsJar, new ByteArrayInputStream(bs), m);
-        shell.console().println("Fault asset [" + faultsJar + "] uploaded to [" + repository + "]");
+        log.info("Fault asset [" + faultsJar + "] uploaded to [" + repository + "]");
         return configuration;
     }
 
     private List<Output> deploy(String stack, String template, boolean update, List<Parameter> parameters,
             Capability... capabilities) throws Exception {
+        List<Output> outputs = new ArrayList<>();
         ChangeSetType type;
+        boolean exists = false;
+        DescribeStacksResult result = cloudFormation.describeStacks();
 
-        if (!exists(stack)) {
+        for (Stack s : result.getStacks()) {
+            if (s.getStackName().equals(stack)) {
+                log.info("Stack [" + stack + "] already exists in [" + s.getStackStatus() + "] status");
+
+                if (s.getStackStatus().equals("CREATE_COMPLETE") || s.getStackStatus().equals("UPDATE_COMPLETE")) {
+                    exists = true;
+                    outputs.addAll(s.getOutputs());
+                } else {
+                    log.info("Deleting stack [" + stack + "]");
+                    DeleteStackRequest request = new DeleteStackRequest().withStackName(stack);
+                    cloudFormation.deleteStack(request);
+                    wait(() -> {
+                        DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest()
+                                .withStackName(s.getStackId());
+                        String status = cloudFormation.describeStacks(describeStacksRequest).getStacks().get(0)
+                                .getStackStatus();
+
+                        if (status.equals("DELETE_COMPLETE")) {
+                            return true;
+                        } else if (status.equals("DELETE_IN_PROGRESS")) {
+                            log.debug("Waiting for deleting stack [" + stack + "]; Status [" + status + "]");
+                            return false;
+                        } else {
+                            throw new IllegalStateException("'DeleteStack' failed in [" + status + "] for a reason of ["
+                                    + s.getStackStatusReason() + "]");
+                        }
+                    });
+                    log.info("Stack [" + stack + "] deleted");
+                }
+            }
+        }
+
+        if (!exists) {
             type = ChangeSetType.CREATE;
         } else if (update) {
             type = ChangeSetType.UPDATE;
         } else {
-            return new ArrayList<>();
+            return outputs;
         }
 
-        shell.console().println("Deploying stack [" + stack + "]");
+        log.info("Deploying stack [" + stack + "]");
         String changeSet = "prodigy-" + UUID.randomUUID();
         CreateChangeSetRequest createChangeSetRequest = new CreateChangeSetRequest().withStackName(stack)
                 .withChangeSetName(changeSet).withChangeSetType(type).withTemplateBody(read(template));
@@ -181,26 +251,39 @@ public class DeployCommand implements Command {
         }
 
         cloudFormation.createChangeSet(createChangeSetRequest);
+        MutableBoolean proceed = new MutableBoolean(true);
         wait(() -> {
             DescribeChangeSetRequest request = new DescribeChangeSetRequest().withStackName(stack)
                     .withChangeSetName(changeSet);
-            DescribeChangeSetResult result = cloudFormation.describeChangeSet(request);
-            String status = result.getStatus();
+            DescribeChangeSetResult describeChangeSetResult = cloudFormation.describeChangeSet(request);
+            String status = describeChangeSetResult.getStatus();
 
             if (status.equals("CREATE_COMPLETE")) {
                 return true;
             } else if (status.equals("CREATE_PENDING") || status.equals("CREATE_IN_PROGRESS")) {
                 log.debug("Waiting for creating change set [" + changeSet + "]; Status [" + status + "]");
                 return false;
+            } else if (status.equals("FAILED") && describeChangeSetResult.getStatusReason()
+                    .startsWith("The submitted information didn't contain changes")) {
+                log.info("Stack [" + stack + "] does not contain any changes. Deleting change set [" + changeSet + "]");
+                DeleteChangeSetRequest deleteChangeSetRequest = new DeleteChangeSetRequest().withStackName(stack)
+                        .withChangeSetName(changeSet);
+                cloudFormation.deleteChangeSet(deleteChangeSetRequest);
+                proceed.setFalse();
+                return true;
             } else {
                 throw new IllegalStateException("'CreateChangeSet' failed in [" + status + "] for a reason of ["
-                        + result.getStatusReason() + "]");
+                        + describeChangeSetResult.getStatusReason() + "]");
             }
         });
+
+        if (proceed.isFalse()) {
+            return outputs;
+        }
+
         ExecuteChangeSetRequest executeChangeSetRequest = new ExecuteChangeSetRequest().withStackName(stack)
                 .withChangeSetName(changeSet);
         cloudFormation.executeChangeSet(executeChangeSetRequest);
-        List<Output> outputs = new ArrayList<>();
         wait(() -> {
             DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stack);
             Stack s = cloudFormation.describeStacks(request).getStacks().get(0);
@@ -210,7 +293,7 @@ public class DeployCommand implements Command {
                 outputs.addAll(s.getOutputs());
                 return true;
             } else if (status.equals("CREATE_IN_PROGRESS") || status.equals("UPDATE_IN_PROGRESS")
-                    || status.equals("REVIEW_IN_PROGRESS")) {
+                    || status.equals("REVIEW_IN_PROGRESS") || status.equals("UPDATE_COMPLETE_CLEANUP_IN_PROGRESS")) {
                 log.debug("Waiting for executing change set [" + changeSet + "]; Status [" + status + "]");
                 return false;
             } else {
@@ -218,28 +301,21 @@ public class DeployCommand implements Command {
                         + s.getStackStatusReason() + "]");
             }
         });
-        shell.console().println("Stack [" + stack + "] deployment completed");
+        log.info("Stack [" + stack + "] deployed");
         return outputs;
-    }
-
-    private boolean exists(String stack) {
-        DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stack);
-        DescribeStacksResult result = cloudFormation.describeStacks(request);
-        return !result.getStacks().isEmpty();
     }
 
     private String read(String resource) throws IOException {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(DeployCommand.class.getResourceAsStream(resource)))) {
-            StringBuilder builder = new StringBuilder();
-            reader.lines().forEach(builder::append);
-            return builder.toString();
+            return reader.lines().collect(Collectors.joining(System.lineSeparator()));
         }
     }
 
     private void wait(Supplier<Boolean> supplier) throws InterruptedException {
         while (!supplier.get()) {
-            Thread.sleep(50000);
+            log.info("Waiting for a response");
+            Thread.sleep(5000);
         }
     }
 

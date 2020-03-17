@@ -70,7 +70,9 @@ public class PushHandler implements RequestHandler<APIGatewayProxyRequestEvent, 
                         return output.withStatusCode(400).withBody(message);
                     }
 
+                    log.info("Pushing fault jar [" + name + "]");
                     Prodigy.container().repository().save(name, item.openStream());
+                    log.info("Fault jar [" + name + "] pushed");
                     return output.withStatusCode(200).withBody("{}");
                 }
             }
