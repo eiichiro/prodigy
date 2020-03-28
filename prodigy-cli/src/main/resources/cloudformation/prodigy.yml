@@ -117,7 +117,6 @@ Resources:
       Runtime: java8
       Timeout: 30
       MemorySize: 256
-      ReservedConcurrentExecutions: 1
   EjectHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -134,7 +133,6 @@ Resources:
       Runtime: java8
       Timeout: 30
       MemorySize: 256
-      ReservedConcurrentExecutions: 1
   StatusHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -151,7 +149,6 @@ Resources:
       Runtime: java8
       Timeout: 30
       MemorySize: 256
-      ReservedConcurrentExecutions: 1
   PushHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -167,8 +164,7 @@ Resources:
       Role: !GetAtt ApiHandlerRole.Arn
       Runtime: java8
       Timeout: 30
-      MemorySize: 256
-      ReservedConcurrentExecutions: 1
+      MemorySize: 512
   FaultsHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -185,7 +181,6 @@ Resources:
       Runtime: java8
       Timeout: 30
       MemorySize: 256
-      ReservedConcurrentExecutions: 1
   SchedulerHandlerFunction:
     Type: AWS::Lambda::Function
     Properties:

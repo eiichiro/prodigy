@@ -16,19 +16,12 @@
  */
 package io.eiichiro.prodigy;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class ProvisionedConcurrency {
 
-@Documented
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface Named {
+    private ProvisionedConcurrency() {}
 
-    String value();
+    public static void warmup() {
+        Prodigy.container();
+    }
 
 }

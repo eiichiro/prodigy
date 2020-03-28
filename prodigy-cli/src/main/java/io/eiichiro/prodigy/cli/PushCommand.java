@@ -83,6 +83,8 @@ public class PushCommand implements Command {
                     + content + "]");
                 }
             }
+
+            return;
         }
 
         shell.console().println("Unsupported usage");

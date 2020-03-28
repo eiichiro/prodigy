@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
+ * Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +29,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import io.eiichiro.prodigy.Scheduler.Entry;
 
 public class Container {
 
     private static final long PERIOD = 5;
 
-    private Log log = LogFactory.getLog(getClass());
+    private static Log log = LogFactory.getLog(Container.class);
 
     private final Repository repository;
 
@@ -108,12 +108,14 @@ public class Container {
         syncRepository();
         ScheduledExecutorService repositorySyncExecutor = Executors.newSingleThreadScheduledExecutor();
         long repositorySyncInterval = interval(PERIOD * 3);
-        repositorySyncExecutor.scheduleAtFixedRate(this::syncRepository, repositorySyncInterval, repositorySyncInterval, TimeUnit.SECONDS);
+        repositorySyncExecutor.scheduleWithFixedDelay(this::syncRepository, repositorySyncInterval,
+                repositorySyncInterval, TimeUnit.SECONDS);
         log.info("Starting sync with scheduler");
         syncScheduler();
         ScheduledExecutorService schedulerSyncExecutor = Executors.newSingleThreadScheduledExecutor();
         long schedulerSyncInterval = interval(PERIOD);
-        schedulerSyncExecutor.scheduleAtFixedRate(this::syncScheduler, schedulerSyncInterval, schedulerSyncInterval, TimeUnit.SECONDS);
+        schedulerSyncExecutor.scheduleWithFixedDelay(this::syncScheduler, schedulerSyncInterval,
+                schedulerSyncInterval, TimeUnit.SECONDS);
         this.repositorySyncExecutor = repositorySyncExecutor;
         this.schedulerSyncExecutor = schedulerSyncExecutor;
     }
