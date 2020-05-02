@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
- * Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,21 @@
  */
 package io.eiichiro.prodigy;
 
+/**
+ * {@code Violation} represents constraint violation found in input parameter 
+ * validation.
+ * 
+ * @author <a href="mailto:eiichiro.uchiumi@gmail.com">Eiichiro Uchiumi</a>
+ */
 public class Violation {
 
     private final String message;
 
+    /**
+     * Creates a new {@code Violation} instance with the specified error message.
+     * 
+     * @param message The error message.
+     */
     public Violation(String message) {
         this.message = message;
     }

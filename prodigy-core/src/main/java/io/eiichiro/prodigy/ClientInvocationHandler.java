@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
- * Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,15 +29,18 @@ public class ClientInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Invocation invocation = new Invocation().target(target).method(method).args(args);
+        Invocation invocation = new Invocation(target, method).args(args);
 
         for (Interceptor interceptor : Prodigy.container().interceptors().values()) {
-            if (interceptor.intercept(invocation)) {
+            if (interceptor.apply(invocation)) {
                 return throwOrResult(invocation);
             }
         }
 
-        invocation.proceed();
+        if (!invocation.proceeded()) {
+            invocation.proceed();
+        }
+
         return throwOrResult(invocation);
     }
 

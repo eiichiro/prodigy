@@ -1,0 +1,7 @@
+default: profile-1
+profile-1: 
+  endpoint: https://endpoint-1.execute-api.us-east-1.amazonaws.com/beta
+profile-2: 
+  endpoint: https://endpoint-2.execute-api.us-east-1.amazonaws.com/beta
+profile-3: 
+  endpoint: https://endpoint-3.execute-api.us-east-1.amazonaws.com/beta

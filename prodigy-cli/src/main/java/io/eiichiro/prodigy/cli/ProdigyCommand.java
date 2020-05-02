@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +52,18 @@ public class ProdigyCommand implements Command {
 
     private final Shell shell;
 
+    static {
+        ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
+        builder.setStatusLevel(Level.ERROR);
+        AppenderComponentBuilder appenderBuilder = builder.newAppender("Stdout", "CONSOLE").addAttribute("target",
+                ConsoleAppender.Target.SYSTEM_OUT);
+        appenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern",
+                "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n%throwable"));
+        builder.add(appenderBuilder);
+        builder.add(builder.newRootLogger(Level.INFO).add(builder.newAppenderRef("Stdout")));
+        Configurator.initialize(builder.build());
+    }
+
     public ProdigyCommand(Shell shell) {
         this.shell = shell;
     }
@@ -62,7 +75,7 @@ public class ProdigyCommand implements Command {
 
     @Override
     public Usage usage() {
-        Usage usage = new Usage("prodigy [options] [subcommand] [parameters]");
+        Usage usage = new Usage("prodigy [options] [command] [parameters]");
         usage.option("v", "verbose", false, "turn on debug logging");
         usage.option(null, "config", false, "specify configuration file", "path");
         return usage;
@@ -73,15 +86,7 @@ public class ProdigyCommand implements Command {
         // Configure Log4j 2 according to the specified verbose option.
         Map<String, String> options = line.options();
         boolean verbose = options.containsKey("v") || options.containsKey("verbose");
-        ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
-        builder.setStatusLevel(Level.ERROR);
-        AppenderComponentBuilder appenderBuilder = builder.newAppender("Stdout", "CONSOLE").addAttribute("target",
-                ConsoleAppender.Target.SYSTEM_OUT);
-        appenderBuilder.add(builder.newLayout("PatternLayout").addAttribute("pattern",
-                "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n%throwable"));
-        builder.add(appenderBuilder);
-        builder.add(builder.newRootLogger((verbose) ? Level.DEBUG : Level.INFO).add(builder.newAppenderRef("Stdout")));
-        Configurator.initialize(builder.build());
+        Configurator.setRootLevel((verbose) ? Level.DEBUG : Level.INFO);
         Log log = LogFactory.getLog(getClass());
 
         // Load configuration file.

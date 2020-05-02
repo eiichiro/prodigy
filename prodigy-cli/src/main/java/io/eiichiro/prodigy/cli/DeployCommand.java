@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +48,8 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.ByteStreams;
@@ -104,15 +107,14 @@ public class DeployCommand implements Command {
                     configuration.put(profile, c);
 
                     if (Files.notExists(path)) {
-                        FileUtils.touch(path.toFile());
+                        touch();
                     }
 
-                    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-                    mapper.writeValue(path.toFile(), configuration);
+                    write();
                     shell.console().prompt("prodigy|" + profile + "> ");
                     log.info("Default profile has been updated with [" + profile + "]");
                     log.debug("Configuration file [" + path + "] updated");
-                    Files.readAllLines(path).stream().forEach(log::debug);
+                    read().stream().forEach(log::debug);
                     Command command = new ConfigureCommand(shell, configuration, path);
 
                     if (!shell.commands().containsKey(command.name())) {
@@ -303,6 +305,19 @@ public class DeployCommand implements Command {
         });
         log.info("Stack [" + stack + "] deployed");
         return outputs;
+    }
+
+    private void touch() throws IOException {
+        FileUtils.touch(path.toFile());
+    }
+
+    private void write() throws JsonGenerationException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.writeValue(path.toFile(), configuration);
+    }
+
+    private List<String> read() throws IOException {
+        return Files.readAllLines(path);
     }
 
     private String read(String resource) throws IOException {

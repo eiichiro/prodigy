@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
- * Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,30 +21,63 @@ import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
 
+/**
+ * {@code Prodigy} is the helper class to adapt application objects to Prodigy 
+ * and give an access to core runtime components internally.
+ * 
+ * @author <a href="mailto:eiichiro.uchiumi@gmail.com">Eiichiro Uchiumi</a>
+ */
 public final class Prodigy {
 
-    private static Configuration configuration = new Configuration();
+    private static Configuration configuration;
 
-    private static Container container = new Container();
+    private static Container container;
 
     private Prodigy() {}
 
-    public static Configuration configuration() {
+    static Configuration configuration() {
+        if (configuration == null) {
+            synchronized (Prodigy.class) {
+                if (configuration == null) {
+                    configuration = new Configuration();
+                }
+            }
+        }
+
         return configuration;
     }
 
-    public static void configuration(Configuration configuration) {
+    static void configuration(Configuration configuration) {
         Prodigy.configuration = configuration;
     }
 
-    public static Container container() {
+    static Container container() {
+        if (container == null) {
+            synchronized (Prodigy.class) {
+                if (container == null) {
+                    container = new Container();
+                }
+            }
+        }
+
         return container;
     }
 
-    public static void container(Container container) {
+    static void container(Container container) {
         Prodigy.container = container;
     }
 
+    /**
+     * Manipulates the specified the target object to adapt to Prodigy.
+     * Method invocation on the Prodigy-adapted object is intercepted by the 
+     * faults implement {@code Interceptor}. Specified target object must be 
+     * an interface type.
+     * 
+     * @param <T> Any interface type.
+     * @param target The target object to adapt to Prodigy.
+     * @return Prodigy-adapted target object.
+     * @throws IllegalArgumentException If the specified target object is not an interface type.
+     */
     @SuppressWarnings("unchecked")
     public static <T> T adapt(T target) {
         List<Class<?>> interfaces = ClassUtils.getAllInterfaces(target.getClass());
@@ -54,7 +87,7 @@ public final class Prodigy {
             T client = (T) proxy;
             return client;
         } catch (ClassCastException e) {
-            throw new IllegalArgumentException("", e);
+            throw new IllegalArgumentException("Specified target must be an interface type", e);
         }
     }
 

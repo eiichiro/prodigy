@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
- * Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,10 @@ public class EjectHandler implements RequestHandler<APIGatewayProxyRequestEvent,
 
     private static Log log = LambdaLogFactory.getLog(EjectHandler.class);
 
+    static {
+        ProvisionedConcurrency.warmup();
+    }
+    
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent output = new APIGatewayProxyResponseEvent();
@@ -56,9 +60,9 @@ public class EjectHandler implements RequestHandler<APIGatewayProxyRequestEvent,
             }
 
             log.info("Fault id [" + id + "] ejected");
-            return output.withStatusCode(200).withBody(mapper.writeValueAsString("{}"));
+            return output.withStatusCode(200).withBody("{}");
         } catch (JsonParseException e) {
-            String message = "Parameter must be JSON object: " + e.getMessage();
+            String message = "Parameter must be a JSON object: " + e.getMessage();
             log.warn(message, e);
             return output.withStatusCode(400).withBody(message);
         } catch (Exception e) {

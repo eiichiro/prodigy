@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.eiichiro.prodigy.faults;
 
 import java.lang.reflect.Constructor;
@@ -24,6 +40,12 @@ import io.eiichiro.prodigy.Named;
 import io.eiichiro.prodigy.Validator;
 import io.eiichiro.prodigy.Violation;
 
+/**
+ * {@code AmazonDynamoDBErrorFault} is a fault implementation that simulates 
+ * Amazon DynamoDB to return error response.
+ * 
+ * @author <a href="mailto:eiichiro.uchiumi@gmail.com">Eiichiro Uchiumi</a>
+ */
 @Named("dynamodb-error")
 public class AmazonDynamoDBErrorFault extends Fault implements Validator, Interceptor {
 
@@ -70,6 +92,93 @@ public class AmazonDynamoDBErrorFault extends Fault implements Validator, Interc
 
     private String errorCode;
 
+    /**
+     * Validates specified <code>statusCode</code> and <code>errorCode</code> 
+     * meet the follwing constraints.
+     * <table>
+     *  <tr>
+     *      <th>statusCode</th><th>errorCode</th>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>AccessDeniedException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>IncompleteSignature</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>InvalidAction</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>InvalidParameterCombination</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>InvalidParameterValue</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>InvalidQueryParameter</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>MissingAction</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>MissingParameter</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>RequestExpired</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ThrottlingException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ThrottlingException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ProvisionedThroughputExceededException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>RequestLimitExceeded</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ResourceNotFoundException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ItemCollectionSizeLimitExceededException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>ConditionalCheckFailedException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>400</td><td>TransactionConflictException</td>
+     *  </tr>
+     *  <tr>
+     *      <td>403</td><td>InvalidClientTokenId</td>
+     *  </tr>
+     *  <tr>
+     *      <td>403</td><td>MissingAuthenticationToken</td>
+     *  </tr>
+     *  <tr>
+     *      <td>403</td><td>OptInRequired</td>
+     *  </tr>
+     *  <tr>
+     *      <td>404</td><td>(empty)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>404</td><td>MalformedQueryString</td>
+     *  </tr>
+     *  <tr>
+     *      <td>500</td><td>InternalFailure</td>
+     *  </tr>
+     *  <tr>
+     *      <td>500</td><td>InternalServerError</td>
+     *  </tr>
+     *  <tr>
+     *      <td>503</td><td>(empty)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>503</td><td>ServiceUnavailable</td>
+     *  </tr>
+     * </table>
+     */
     @Override
     public Set<Violation> validate() {
         final Set<Violation> violations = new HashSet<>();
@@ -89,35 +198,40 @@ public class AmazonDynamoDBErrorFault extends Fault implements Validator, Interc
     }
 
     /**
-     * @return the statusCode
+     * @return The <code>statusCode</code>.
      */
     public Integer getStatusCode() {
         return statusCode;
     }
 
     /**
-     * @param statusCode the statusCode to set
+     * @param statusCode The <code>statusCode</code> to set.
      */
     public void setStatusCode(final Integer statusCode) {
         this.statusCode = statusCode;
     }
 
     /**
-     * @return the errorCode
+     * @return The <code>errorCode</code>.
      */
     public String getErrorCode() {
         return errorCode;
     }
 
     /**
-     * @param errorCode the errorCode to set
+     * @param errorCode The <code>errorCode</code> to set.
      */
     public void setErrorCode(final String errorCode) {
         this.errorCode = errorCode;
     }
 
+    /**
+     * Sets the exception according to the specified <code>statusCode</code> 
+     * and <code>errorCode</code> into the method invocation if the target 
+     * object is an instance of {@code com.amazonaws.services.dynamodbv2.AmazonDynamoDB}.
+     */
     @Override
-    public boolean intercept(final Invocation invocation) throws Throwable {
+    public boolean apply(final Invocation invocation) throws Throwable {
         if (!(invocation.target() instanceof AmazonDynamoDB)) {
             return false;
         }

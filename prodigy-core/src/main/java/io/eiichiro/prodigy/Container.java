@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Eiichiro Uchiumi and The Prodigy Authors. All 
- * Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -82,7 +83,8 @@ public class Container {
         }
 
         try {
-            Fault fault = new ObjectMapper().readValue(params, clazz);
+            Fault fault = new ObjectMapper().configure(
+                    DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(params, clazz);
             fault.id(id);
             return fault;
         } catch (Exception e) {

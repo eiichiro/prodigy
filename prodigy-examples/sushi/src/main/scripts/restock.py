@@ -1,3 +1,5 @@
+# Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+# All Rights Reserved.
 import json
 import logging
 import os
@@ -5,6 +7,11 @@ import sys
 import urllib.request
 
 def main():
+    """The main method sends '/restock' request for the initialization.
+
+    Environment variable 'PRODIGY_SUSHI_ENDPOINT' must be pointed to Prodigy 
+    Sushi API endpoint URL that 'mvn deploy' output.
+    """
     logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
     endpoint = os.getenv('PRODIGY_SUSHI_ENDPOINT')
     

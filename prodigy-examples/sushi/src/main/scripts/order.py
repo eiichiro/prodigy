@@ -1,3 +1,5 @@
+# Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+# All Rights Reserved.
 from enum import Enum
 import json
 import logging
@@ -8,6 +10,7 @@ import time
 import urllib.request
 
 class Item(Enum):
+    """Item provides sushi item constants."""
     SALMON = 'salmon'
     YELLOWTAIL = 'yellowtail'
     TUNA = 'tuna'
@@ -21,6 +24,12 @@ class Item(Enum):
     CUCUMBER_ROLL = 'cucumber roll'
 
 def main():
+    """The main method sends '/order' request for randomly selected Item every 
+    1 second.
+
+    Environment variable 'PRODIGY_SUSHI_ENDPOINT' must be pointed to Prodigy 
+    Sushi API endpoint URL that 'mvn deploy' output.
+    """
     logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
     endpoint = os.getenv('PRODIGY_SUSHI_ENDPOINT')
     

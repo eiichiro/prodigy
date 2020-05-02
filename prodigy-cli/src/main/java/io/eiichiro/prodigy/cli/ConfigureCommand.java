@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +16,14 @@
  */
 package io.eiichiro.prodigy.cli;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -62,15 +67,14 @@ public class ConfigureCommand implements Command {
         if (line.args().size() == 1) {
             String profile = line.args().get(0);
 
-            if (!configuration.containsKey(profile)) {
-                log.warn("Profile [" + profile + "] does not exist. Run deploy <profile> command first");
-                return;
-            }
-
             if (line.options().containsKey("default")) {
+                if (!configuration.containsKey(profile)) {
+                    log.warn("Profile [" + profile + "] does not exist. Run deploy <profile> command first");
+                    return;
+                }
+
                 configuration.put("default", profile);
-                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-                mapper.writeValue(path.toFile(), configuration);
+                write();
                 shell.console().prompt("prodigy|" + profile + "> ");
                 log.info("Default profile has been updated with [" + profile + "]");
                 log.debug("Configuration file [" + path + "] updated");
@@ -80,13 +84,22 @@ public class ConfigureCommand implements Command {
 
         } else if (line.args().isEmpty()) {
             if (line.options().isEmpty()) {
-                Files.readAllLines(path).stream().forEach(shell.console()::println);
+                read().stream().forEach(shell.console()::println);
                 return;
             }
         }
 
         shell.console().println("Unsupported usage");
         shell.console().println(usage().toString());
-	}
+    }
+
+    private void write() throws JsonGenerationException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.writeValue(path.toFile(), configuration);
+    }
+
+    private List<String> read() throws IOException {
+        return Files.readAllLines(path);
+    }
 
 }

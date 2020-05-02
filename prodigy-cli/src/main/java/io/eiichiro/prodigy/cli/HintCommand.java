@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Eiichiro Uchiumi and The Prodigy Authors. All Rights Reserved.
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +46,7 @@ public class HintCommand implements Command {
     public void run(Line line) throws Exception {
 		try {
             shell.console().reader().printColumns(shell.commands().keySet());
+            shell.console().reader().flush();
 		} catch (IOException e) {
 			e.printStackTrace(new PrintWriter(shell.console().reader().getOutput()));
 		}

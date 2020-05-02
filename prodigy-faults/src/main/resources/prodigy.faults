@@ -1,2 +1,4 @@
+# Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+# All Rights Reserved.
 io.eiichiro.prodigy.faults.DummyFault
 io.eiichiro.prodigy.faults.AmazonDynamoDBErrorFault

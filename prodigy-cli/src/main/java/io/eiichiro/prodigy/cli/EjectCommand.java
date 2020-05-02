@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2019-present Eiichiro Uchiumi and the Prodigy Authors. 
+ * All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.eiichiro.prodigy.cli;
 
 import java.util.LinkedHashMap;
@@ -16,7 +32,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.eiichiro.ash.Command;
@@ -32,15 +48,15 @@ public class EjectCommand implements Command {
 
     private final Map<String, Object> configuration;
 
-    private HttpClientBuilder httpClientBuilder;
+    private CloseableHttpClient httpClient;
 
     public EjectCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
         AWS4Signer signer = new AWS4Signer();
         signer.setServiceName("execute-api");
-        httpClientBuilder = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                signer, DefaultAWSCredentialsProviderChain.getInstance()));
+        httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
+                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
     }
 
     @Override
@@ -67,7 +83,7 @@ public class EjectCommand implements Command {
             HttpPost post = new HttpPost(((Map<String, Object>) configuration.get(profile)).get("endpoint") + "/eject");
             post.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
-            try (CloseableHttpResponse response = httpClientBuilder.build().execute(post)) {
+            try (CloseableHttpResponse response = httpClient.execute(post)) {
                 StatusLine status = response.getStatusLine();
                 String content = EntityUtils.toString(response.getEntity(), ContentType.APPLICATION_JSON.getCharset());
                 log.debug(content);
@@ -86,8 +102,8 @@ public class EjectCommand implements Command {
         shell.console().println(usage().toString());
     }
 
-    public void httpClientBuilder(HttpClientBuilder httpClientBuilder) {
-        this.httpClientBuilder = httpClientBuilder;
+    public void httpClient(CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
 }
