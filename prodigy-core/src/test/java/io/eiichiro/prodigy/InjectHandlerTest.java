@@ -2,6 +2,7 @@ package io.eiichiro.prodigy;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -42,7 +43,7 @@ public class InjectHandlerTest {
 		input.setBody("{\"name\" : \"fault-1\"}");
 		output = handler.handleRequest(input, null);
 		assertThat(output.getStatusCode(), is(400));
-		assertThat(output.getBody(), is("Fault cannot be instantiated with name [fault-1] and params []"));
+		assertThat(output.getBody(), is("Fault cannot be instantiated with name [fault-1] and params [{}]"));
 
 		// Validator returns violations - APIGatewayProxyResponseEvent with status code 400
 		container = mock(Container.class);
@@ -89,7 +90,11 @@ public class InjectHandlerTest {
 		container = mock(Container.class);
 		fault = new Validator2();
 		fault.id("fault-id-2");
-		doReturn(fault).when(container).fault(anyString(), anyString());
+		Fault result = fault;
+		doAnswer(i -> {
+			assertThat(i.getArgument(1), is("{}"));
+			return result;
+		}).when(container).fault(anyString(), anyString());
 		doReturn(scheduler).when(container).scheduler();
 		Prodigy.container(container);
 		input = new APIGatewayProxyRequestEvent();

@@ -54,7 +54,7 @@ public class InjectHandler implements RequestHandler<APIGatewayProxyRequestEvent
             String params = request.get("params");
 
             if (params == null) {
-                params = "";
+                params = "{}";
             }
 
             Fault fault = Prodigy.container().fault(name, params);

@@ -130,9 +130,6 @@ public class AmazonDynamoDBErrorFault extends Fault implements Validator, Interc
      *      <td>400</td><td>ThrottlingException</td>
      *  </tr>
      *  <tr>
-     *      <td>400</td><td>ThrottlingException</td>
-     *  </tr>
-     *  <tr>
      *      <td>400</td><td>ProvisionedThroughputExceededException</td>
      *  </tr>
      *  <tr>

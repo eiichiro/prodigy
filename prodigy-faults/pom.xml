@@ -42,6 +42,7 @@
       <groupId>io.eiichiro.prodigy</groupId>
       <artifactId>prodigy-core</artifactId>
       <version>${prodigy.core.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>

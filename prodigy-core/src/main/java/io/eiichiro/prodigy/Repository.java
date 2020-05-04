@@ -76,14 +76,21 @@ public class Repository {
             result.getObjectSummaries().forEach(s -> objects.add(s.getKey()));
         }
 
-        List<String> files = new ArrayList<>();     // Cached fault jars in local
+        String tmpdir = Environment.getProperty("java.io.tmpdir");
+
+        if (!tmpdir.endsWith(File.separator)) {
+            tmpdir += File.separator;
+        }
+
+        tmpdir += CACHE;
 
         try {
-            if (!exists(CACHE)) {
-                create(CACHE);
+            if (!exists(tmpdir)) {
+                create(tmpdir);
             }
 
-            list(CACHE).forEach(f -> {
+            List<String> files = new ArrayList<>();     // Cached fault jars in local
+            list(tmpdir).forEach(f -> {
                 files.add(Paths.get(f).getFileName().toString());
             });
             log.debug("Saved fault jars are [" + objects + "]");
@@ -91,13 +98,13 @@ public class Repository {
 
             Collection<String> add = CollectionUtils.subtract(objects, files);
             Collection<String> remove = CollectionUtils.subtract(files, objects);
-            create(CACHE, add);
-            delete(CACHE, remove);
+            create(tmpdir, add);
+            delete(tmpdir, remove);
     
             if (!add.isEmpty() || !remove.isEmpty()) {
                 List<URL> urls = new ArrayList<>();
 
-                for (String file : list(CACHE)) {
+                for (String file : list(tmpdir)) {
                     urls.add(Paths.get(file).toUri().toURL());
                 }
     
