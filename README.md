@@ -186,6 +186,8 @@ Now you can exit both terminal sessions for this Getting Started.
 
 Next Step
 ---
+Highly recommended to walk through from top to bottom.
+
 * [CLI](https://github.com/eiichiro/prodigy/wiki/CLI)
 * [Build Your Own Faults](https://github.com/eiichiro/prodigy/wiki/Build-Your-Own-Faults)
 * [Ready-made Faults](https://github.com/eiichiro/prodigy/wiki/Ready-made-Faults)
