@@ -35,6 +35,8 @@ $ mvn install
 ```
 
 ### Deploying Prodigy control plane stack
+![](https://github.com/eiichiro/prodigy/wiki/images/deploy.gif)
+
 Type the following command to start Prodigy CLI.
 
 ```
@@ -67,6 +69,8 @@ prodigy> deploy prod
 The control plane stack is deployed in the region specified in the current AWS CLI configuration. The default is `us-east-1`.
 
 ### Injecting fault
+![](https://github.com/eiichiro/prodigy/wiki/images/example.gif)
+
 There is an example application named 'Sushi' for the experience of a simple failure injection with Prodigy. Open another terminal session (note to keep current Prodigy CLI session) and move to the application directory by typing the following command.
 
 ```
