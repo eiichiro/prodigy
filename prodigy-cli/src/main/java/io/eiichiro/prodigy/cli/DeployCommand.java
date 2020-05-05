@@ -136,6 +136,27 @@ public class DeployCommand implements Command {
                         log.debug("Command [" + EjectCommand.class.getName() + "] enabled");
                     }
 
+                    command = new StatusCommand(shell, configuration);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + StatusCommand.class.getName() + "] enabled");
+                    }
+
+                    command = new FaultsCommand(shell, configuration);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + FaultsCommand.class.getName() + "] enabled");
+                    }
+
+                    command = new PushCommand(shell, configuration);
+
+                    if (!shell.commands().containsKey(command.name())) {
+                        shell.register(command);
+                        log.debug("Command [" + PushCommand.class.getName() + "] enabled");
+                    }
+
                     shell.console().println("Prodigy has been successfully deployed for profile [" + profile + "]");
                 } catch (Exception e) {
                     log.warn(e.getMessage(), e);
