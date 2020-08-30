@@ -17,7 +17,7 @@ public class FaultsHandlerTest {
 
 	@Test
 	public void testHandleRequest() {
-		// Repository throws Exception - APIGatewayProxyResponseEvent with status code 500
+		// Prodigy throws Exception - APIGatewayProxyResponseEvent with status code 500
 		FaultsHandler handler = new FaultsHandler();
 		Repository repository = mock(Repository.class);
 		doThrow(new IllegalStateException("hello")).when(repository).load();

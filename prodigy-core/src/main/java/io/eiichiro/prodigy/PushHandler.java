@@ -84,23 +84,15 @@ public class PushHandler implements RequestHandler<APIGatewayProxyRequestEvent, 
 
                 if (!item.isFormField() && item.getFieldName().equals("jar")) {
                     String name = item.getName();
-
-                    if (!name.endsWith(".jar")) {
-                        String message = "Parameter 'jar' must be a jar file";
-                        log.warn(message);
-                        return output.withStatusCode(400).withBody(message);
-                    }
-
-                    log.info("Pushing fault jar [" + name + "]");
-                    Prodigy.container().repository().save(name, item.openStream());
-                    log.info("Fault jar [" + name + "] pushed");
+                    Prodigy.push(name, item.openStream());
                     return output.withStatusCode(200).withBody("{}");
                 }
             }
 
-            String message = "Parameter 'jar' is required";
-            log.warn(message);
-            return output.withStatusCode(400).withBody(message);
+            throw new IllegalArgumentException("Parameter 'jar' is required");
+        } catch (IllegalArgumentException e) {
+            log.warn(e.getMessage(), e);
+            return output.withStatusCode(400).withBody(e.getMessage());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return output.withStatusCode(500).withBody(e.getMessage());

@@ -73,13 +73,13 @@ public class Scheduler {
                 .withConditionExpression("attribute_not_exists(id)");
         
         try {
-                dynamoDB.putItem(request);
-                return true;
-            } catch (ConditionalCheckFailedException e) {
-                log.warn(e.getMessage(), e);
-                return false;
-            }
+            dynamoDB.putItem(request);
+            return true;
+        } catch (ConditionalCheckFailedException e) {
+            log.warn(e.getMessage(), e);
+            return false;
         }
+    }
 
     public boolean unschedule(String id) {
         Map<String, AttributeValue> key = new HashMap<>();

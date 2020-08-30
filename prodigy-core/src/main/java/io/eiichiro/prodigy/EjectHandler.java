@@ -39,32 +39,21 @@ public class EjectHandler implements RequestHandler<APIGatewayProxyRequestEvent,
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent output = new APIGatewayProxyResponseEvent();
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
             Map<String, String> request = mapper.readValue(input.getBody(), new TypeReference<Map<String, String>>() {
             });
             String id = request.get("id");
-
-            if (id == null) {
-                return output.withStatusCode(400).withBody("Parameter 'id' is required");
-            }
-
-            log.info("Ejecting fault id [" + id + "]");
-            boolean result = Prodigy.container().scheduler().unschedule(id);
-
-            if (!result) {
-                String message = "Fault id [" + id + "] not found";
-                log.warn(message);
-                return output.withStatusCode(400).withBody(message);
-            }
-
-            log.info("Fault id [" + id + "] ejected");
+            Prodigy.eject(id);
             return output.withStatusCode(200).withBody("{}");
         } catch (JsonParseException e) {
             String message = "Parameter must be a JSON object: " + e.getMessage();
             log.warn(message, e);
             return output.withStatusCode(400).withBody(message);
+        } catch (IllegalArgumentException e) {
+            log.warn(e.getMessage(), e);
+            return output.withStatusCode(400).withBody(e.getMessage());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return output.withStatusCode(500).withBody(e.getMessage());

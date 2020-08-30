@@ -37,10 +37,10 @@ public class FaultsHandler implements RequestHandler<APIGatewayProxyRequestEvent
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent output = new APIGatewayProxyResponseEvent();
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Class<? extends Fault>> faults = Prodigy.container().repository().load();
+            Map<String, Class<? extends Fault>> faults = Prodigy.faults();
             return output.withStatusCode(200).withBody(mapper.writeValueAsString(faults));
         } catch (Exception e) {
             log.error(e.getMessage(), e);

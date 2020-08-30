@@ -54,8 +54,8 @@ public class LambdaLogFactory {
         PatternLayout layout = PatternLayout.newBuilder()
                 .withPattern("%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n%throwable")
                 .withConfiguration(configuration).build();
-        Appender appender = LambdaAppender.newBuilder().withLayout(layout).setConfiguration(configuration)
-                .withName("Lambda").build();
+        Appender appender = LambdaAppender.newBuilder().setLayout(layout).setConfiguration(configuration)
+                .setName("Lambda").build();
         appender.start();
         configuration.addAppender(appender);
         AppenderRef ref = AppenderRef.createAppenderRef("Lambda", null, null);

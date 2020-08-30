@@ -18,7 +18,6 @@ package io.eiichiro.prodigy;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -41,55 +40,23 @@ public class InjectHandler implements RequestHandler<APIGatewayProxyRequestEvent
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         APIGatewayProxyResponseEvent output = new APIGatewayProxyResponseEvent();
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
             Map<String, String> request = mapper.readValue(input.getBody(), new TypeReference<Map<String, String>>() {});
             String name = request.get("name");
-
-            if (name == null) {
-                return output.withStatusCode(400).withBody("Parameter 'name' is required");
-            }
-
             String params = request.get("params");
-
-            if (params == null) {
-                params = "{}";
-            }
-
-            Fault fault = Prodigy.container().fault(name, params);
-
-            if (fault == null) {
-                String message = "Fault cannot be instantiated with name [" + name + "] and params [" + params + "]";
-                log.warn(message);
-                return output.withStatusCode(400).withBody(message);
-            }
-    
-            if (fault instanceof Validator) {
-                Set<Violation> violations = ((Validator) fault).validate();
-    
-                if (!violations.isEmpty()) {
-                    return output.withStatusCode(400).withBody("Parameter 'params' is invalid: " + violations);
-                }
-            }
-    
-            log.info("Injecting fault id [" + fault.id() + "]");
-            boolean result = Prodigy.container().scheduler().schedule(fault);
-
-            if (!result) {
-                String message = "Fault id [" + fault.id() + "] already exists";
-                log.warn(message);
-                return output.withStatusCode(400).withBody(message);
-            }
-
-            log.info("Fault id [" + fault.id() + "] injected");
+            String id = Prodigy.inject(name, params);
             Map<String, Object> response = new LinkedHashMap<>();
-            response.put("id", fault.id());
+            response.put("id", id);
             return output.withStatusCode(200).withBody(mapper.writeValueAsString(response));
         } catch (JsonParseException e) {
             String message = "Parameter must be a JSON object: " + e.getMessage();
             log.warn(message, e);
             return output.withStatusCode(400).withBody(message);
+        } catch (IllegalArgumentException e) {
+            log.warn(e.getMessage(), e);
+            return output.withStatusCode(400).withBody(e.getMessage());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return output.withStatusCode(500).withBody(e.getMessage());

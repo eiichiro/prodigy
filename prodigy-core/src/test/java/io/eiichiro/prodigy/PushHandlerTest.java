@@ -43,7 +43,7 @@ public class PushHandlerTest {
 		assertThat(output.getStatusCode(), is(400));
 		assertThat(output.getBody(), is("Parameter 'jar' is required"));
 
-		// File name does not end with '.jar' extension - APIGatewayProxyResponseEvent with status code 400
+		// Prodigy throws IllegalArgumentException - APIGatewayProxyResponseEvent with status code 400
 		input = new APIGatewayProxyRequestEvent();
 		entity = MultipartEntityBuilder.create().addBinaryBody("jar", Paths.get(getClass().getResource("/push-handler-test.zip").getPath()).toFile()).build();
 		headers = new HashMap<>();
@@ -54,9 +54,9 @@ public class PushHandlerTest {
 		handler = new PushHandler();
 		output = handler.handleRequest(input, null);
 		assertThat(output.getStatusCode(), is(400));
-		assertThat(output.getBody(), is("Parameter 'jar' must be a jar file"));
+		assertThat(output.getBody(), is("Parameter 'name' must be *.jar"));
 
-		// Repository throws Exception - APIGatewayProxyResponseEvent with status code 500
+		// Prodigy throws Exception - APIGatewayProxyResponseEvent with status code 500
 		input = new APIGatewayProxyRequestEvent();
 		entity = MultipartEntityBuilder.create().addBinaryBody("jar", Paths.get(getClass().getResource("/push-handler-test.jar").getPath()).toFile()).build();
 		headers = new HashMap<>();
