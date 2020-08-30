@@ -16,6 +16,8 @@
  */
 package io.eiichiro.prodigy;
 
+import static io.eiichiro.prodigy.Handlers.warmup;
+
 import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -31,7 +33,7 @@ public class StatusHandler implements RequestHandler<APIGatewayProxyRequestEvent
     private static Log log = LambdaLogFactory.getLog(StatusHandler.class);
 
     static {
-        ProvisionedConcurrency.warmup();
+        warmup();
     }
 
     @Override

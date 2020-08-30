@@ -4,13 +4,13 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class ProvisionedConcurrencyTest {
+public class HandlersTest {
 
 	@Test
 	public void testWarmup() {
 		Prodigy.configuration(null);
 		Prodigy.container(null);
-		ProvisionedConcurrency.warmup();
+		Handlers.warmup();
 		assertNotNull(Prodigy.configuration());
 		assertNotNull(Prodigy.container());
 	}

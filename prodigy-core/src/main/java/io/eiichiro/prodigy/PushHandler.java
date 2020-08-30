@@ -16,6 +16,8 @@
  */
 package io.eiichiro.prodigy;
 
+import static io.eiichiro.prodigy.Handlers.warmup;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +41,7 @@ public class PushHandler implements RequestHandler<APIGatewayProxyRequestEvent, 
     private static Log log = LambdaLogFactory.getLog(PushHandler.class);
 
     static {
-        ProvisionedConcurrency.warmup();
+        warmup();
     }
 
     @Override

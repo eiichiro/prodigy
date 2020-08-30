@@ -17,7 +17,7 @@
 package io.eiichiro.prodigy;
 
 /**
- * {@code ProvisionedConcurrency} is a helper class to statically initialize 
+ * {@code Handlers} is a helper class to statically initialize 
  * Prodigy core runtime components.
  * If Provisioned Concurrency is enabled on your AWS Lambda functions, you can 
  * easily prewarm core runtime components by invoking {@code #warmup()} method 
@@ -25,9 +25,9 @@ package io.eiichiro.prodigy;
  * 
  * @author <a href="mailto:eiichiro.uchiumi@gmail.com">Eiichiro Uchiumi</a>
  */
-public class ProvisionedConcurrency {
+public class Handlers {
 
-    private ProvisionedConcurrency() {}
+    private Handlers() {}
 
     /**
      * Statically initializes core runtime components.

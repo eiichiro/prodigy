@@ -16,6 +16,8 @@
  */
 package io.eiichiro.prodigy;
 
+import static io.eiichiro.prodigy.Handlers.warmup;
+
 import com.amazonaws.services.dynamodbv2.model.OperationType;
 import com.amazonaws.services.dynamodbv2.model.StreamRecord;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -29,7 +31,7 @@ public class SchedulerHandler implements RequestHandler<DynamodbEvent, Void> {
     private static Log log = LambdaLogFactory.getLog(SchedulerHandler.class);
     
     static {
-        ProvisionedConcurrency.warmup();
+        warmup();
     }
 
     @Override

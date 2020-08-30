@@ -16,6 +16,8 @@
  */
 package io.eiichiro.prodigy;
 
+import static io.eiichiro.prodigy.Handlers.warmup;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public class InjectHandler implements RequestHandler<APIGatewayProxyRequestEvent
     private static Log log = LambdaLogFactory.getLog(InjectHandler.class);
 
     static {
-        ProvisionedConcurrency.warmup();
+        warmup();
     }
 
     @Override
