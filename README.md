@@ -4,7 +4,7 @@ Prodigy
 
 **Disclaimer: this software is not reviewed or endorsed by any organization, and it is provided "as is" without any warranty of any kind. Any use is at your own risk!**
 
-Prodigy is an open-source [Chaos Engineering](http://principlesofchaos.org/) experiment framework which provides control plane stack, CLI and SDK for AWS Java applications. You can easily build, deploy and monitor your own faults with Prodigy to test any scale of failures on your application.
+Prodigy is an open-source [Chaos Engineering](http://principlesofchaos.org/) experimentation framework which provides control plane stack, CLI and SDK for AWS Java applications. You can easily build, deploy and monitor your own faults with Prodigy to test any scale of failures on your application.
 
 Getting Started
 ---
@@ -53,7 +53,7 @@ __________                   .___.__
  |____|     |__|   \____/\____ | |__\___  // ____|
                               \/   /_____/ \/      vx.y.z
 
-Chaos Engineering experiment for AWS Java applications
+Chaos Engineering experimentation for AWS Java applications
 
 Welcome to Prodigy. Hit the TAB or press 'hint' to display available commands.
 Press 'help <command>' to display the detailed information for the command.
