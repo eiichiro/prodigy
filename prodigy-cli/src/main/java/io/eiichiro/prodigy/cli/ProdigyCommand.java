@@ -151,7 +151,7 @@ public class ProdigyCommand implements Command {
             console.println(Colors.yellow(" |____|     |__|   \\____/\\____ | |__\\___  // ____|"));
             console.println(Colors.yellow("                              \\/   /_____/ \\/     " + " v" + properties.version("prodigy.cli")));
             console.println("");
-            console.println(Colors.yellow("Chaos Engineering experimentation for AWS Java applications"));
+            console.println(Colors.yellow("Chaos experimentation for AWS Java applications"));
             console.println("");
             console.println(
                     Colors.yellow("Welcome to Prodigy. Hit the TAB or press 'hint' to display available commands."));
