@@ -18,13 +18,6 @@
 
   <name>prodigy-cli</name>
 
-  <repositories>
-    <repository>
-      <id>mulesoft</id>
-      <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
-    </repository>
-  </repositories>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
