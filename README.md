@@ -2,7 +2,7 @@ Prodigy
 ===
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
-**Disclaimer: this software is not reviewed or endorsed by any organization, and it is provided "as is" without any warranty of any kind. Any use is at your own risk!**
+**Disclaimer: this software is not reviewed or endorsed by any organization, and it is provided "as is" without any warranty of any kind. Any use is at your own risk.**
 
 Prodigy is an open-source [Chaos Engineering](http://principlesofchaos.org/) experimentation framework which provides control plane stack, CLI and SDK for AWS Java applications. You can easily build, deploy and monitor your own faults with Prodigy to test any scale of failures on your application.
 
@@ -53,14 +53,14 @@ __________                   .___.__
  |____|     |__|   \____/\____ | |__\___  // ____|
                               \/   /_____/ \/      vx.y.z
 
-Chaos Engineering experimentation for AWS Java applications
+Chaos experimentation for AWS Java applications
 
 Welcome to Prodigy. Hit the TAB or press 'hint' to display available commands.
 Press 'help <command>' to display the detailed information for the command.
 Press 'exit' to exit this session.
 ```
 
-Prodigy CLI deploys separate control plane stack by the specified profile. Type the following command to deploy a new control plane stack with profile `prod`.
+Prodigy CLI deploys separate control plane stack by the specified profile. Type the following command to deploy a new control plane stack with profile named `prod`.
 
 ```
 prodigy> deploy prod
