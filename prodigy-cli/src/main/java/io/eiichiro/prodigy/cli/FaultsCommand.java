@@ -19,12 +19,6 @@ package io.eiichiro.prodigy.cli;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.logging.Log;
@@ -43,6 +37,14 @@ import org.eiichiro.ash.Line;
 import org.eiichiro.ash.Shell;
 import org.eiichiro.ash.Usage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.acm19.aws.interceptor.http.AwsRequestSigningApacheInterceptor;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.signer.Aws4Signer;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
+
 public class FaultsCommand implements Command {
 
     private final Log log = LogFactory.getLog(getClass());
@@ -56,10 +58,8 @@ public class FaultsCommand implements Command {
     public FaultsCommand(Shell shell, Map<String, Object> configuration) {
         this.shell = shell;
         this.configuration = configuration;
-        AWS4Signer signer = new AWS4Signer();
-        signer.setServiceName("execute-api");
-        httpClient = HttpClients.custom().addInterceptorLast(new AWSRequestSigningApacheInterceptor("execute-api",
-                signer, DefaultAWSCredentialsProviderChain.getInstance())).build();
+        httpClient = HttpClients.custom().addInterceptorLast(new AwsRequestSigningApacheInterceptor("execute-api", 
+                Aws4Signer.create(), DefaultCredentialsProvider.create(), DefaultAwsRegionProviderChain.builder().build().getRegion())).build();
     }
 
     @Override
